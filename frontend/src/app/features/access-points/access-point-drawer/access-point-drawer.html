@@ -1,0 +1,55 @@
+<app-dialog-surface
+  variant="drawer"
+  width="520px"
+  [open]="!!panels.accessPointId()"
+  [heading]="data()?.point?.name ?? 'Loading…'"
+  [subheading]="data() ? categoryLabels[data()!.point.category] + ' · ' + data()!.point.location : null"
+  (closed)="panels.accessPointId.set(null)"
+>
+  @if (data(); as d) {
+    <div class="body">
+      <section class="status-card" [class.offline]="!d.point.online">
+        <span class="big-icon"><app-icon [name]="icon(d.point.id)" [size]="22" /></span>
+        <div class="status-text">
+          @if (d.point.online) {
+            <app-status-badge label="Online" tone="success" icon="wifi" />
+            <span>Reader responding normally · {{ d.point.entriesToday }} entries today</span>
+          } @else {
+            <app-status-badge [label]="'Offline · ' + offlineFor(d.point.offlineSince)" tone="warning" icon="wifi-off" />
+            <span>The controller lost contact with this reader. Credentials assigned here can’t be confirmed until it reconnects.</span>
+          }
+        </div>
+      </section>
+
+      @if (d.camera; as cam) {
+        <section class="section">
+          <h3>{{ cam.label }}</h3>
+          <app-camera-still [kind]="d.point.kind" [offline]="!d.point.online" [name]="d.point.name" />
+          <p class="meta">{{ cam.note }}</p>
+        </section>
+      }
+
+      <section class="section">
+        <h3>Allowed groups <span class="count num">{{ d.groups.length }}</span></h3>
+        <ul class="groups">
+          @for (g of d.groups; track g.id) {
+            <li><strong>{{ g.name }}</strong><span>{{ g.description }}</span></li>
+          }
+        </ul>
+      </section>
+
+      <section class="section">
+        <h3>Recent entries</h3>
+        @if (d.recentEntries.length) {
+          <app-activity-timeline [items]="d.recentEntries" [now]="demo.now()" [showDetail]="true" (select)="openEntry($event)" />
+        } @else {
+          <app-empty-state icon="history" title="No recent entries" message="Access events at this point will appear here." />
+        }
+      </section>
+
+      <p class="scope"><app-icon name="lock" [size]="13" />Remote unlock isn’t part of this demo.</p>
+    </div>
+  } @else {
+    <div class="body"><app-skeleton [rows]="10" /></div>
+  }
+</app-dialog-surface>

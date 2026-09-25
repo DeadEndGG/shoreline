@@ -1,0 +1,249 @@
+<div class="page">
+  <div class="property-strip">
+    <strong>{{ demo.info()?.property?.name ?? 'Shoreline Residences' }}</strong>
+    <span>{{ demo.info()?.property?.city ?? 'Panama City Beach' }} · {{ demo.info()?.property?.units ?? 340 }} units · {{ demo.info()?.property?.floors ?? 14 }} floors</span>
+  </div>
+
+  <header class="page-header">
+    <div>
+      <h1>{{ data()?.greeting ?? 'Good afternoon' }}</h1>
+      <p class="subtitle">{{ demo.now() | ptime: 'long' }} · Property time: {{ demo.info()?.zoneAbbreviation ?? 'CDT' }}</p>
+    </div>
+    <div class="actions">
+      <a class="btn" routerLink="/sync"><app-icon name="refresh" [size]="15" />View sync</a>
+      <button type="button" class="btn primary" (click)="panels.temporaryAccess.set(true)">
+        <app-icon name="plus" [size]="16" />Create temporary access
+      </button>
+    </div>
+  </header>
+
+  @if (data()?.health?.feedStale) {
+    <div class="note warning" role="status">
+      <app-icon name="warning" [size]="16" />
+      <span>
+        <strong>Reservation feed unavailable.</strong>
+        Some upcoming arrivals may need attention. Existing access status requires confirmation.
+        <a routerLink="/sync">Open sync center</a>
+      </span>
+    </div>
+  }
+
+  <section class="metrics" aria-label="Key numbers">
+    @if (data(); as d) {
+      <app-metric-tile label="Active guest stays" icon="house" [value]="d.metrics.activeGuestStays" caption="Short-term stays in progress" link="/people" [query]="{ segment: 'activeStays' }" />
+      <app-metric-tile label="Arrivals today" icon="log-in" [value]="d.metrics.arrivalsToday" [caption]="'Check-in ' + (d.readiness.checkInAt | ptime: 'time')" link="/people" [query]="{ segment: 'arrivalsToday' }" />
+      <app-metric-tile label="Departures today" icon="log-out" [value]="d.metrics.departuresToday" caption="Checkout 10:00 AM" link="/people" [query]="{ segment: 'departuresToday' }" />
+      <app-metric-tile label="Needs attention" icon="warning" tone="warning" [value]="d.metrics.needsAttention" [caption]="d.metrics.needsAttention ? 'Unresolved sync issues' : 'Nothing waiting on you'" link="/sync" [query]="{ filter: 'open' }" />
+    } @else {
+      @for (i of [1, 2, 3, 4]; track i) { <div class="card metric-skeleton"><app-skeleton [rows]="3" /></div> }
+    }
+  </section>
+
+  <div class="columns">
+    <div class="main">
+      <!-- Arrival readiness -->
+      <section class="card readiness" aria-labelledby="readiness-title">
+        <div class="card-header">
+          <div>
+            <h2 id="readiness-title">Arrival readiness</h2>
+            <p class="meta">Today · credentials are prepared ahead of check-in and activate on schedule</p>
+          </div>
+          @if (data()?.readiness?.issues?.length) {
+            <a class="btn sm" routerLink="/sync" [queryParams]="{ filter: 'open' }">Review {{ data()!.readiness.issues.length }} issue{{ data()!.readiness.issues.length === 1 ? '' : 's' }}</a>
+          }
+        </div>
+        <div class="card-body">
+          @if (data(); as d) {
+            <div class="ready-line">
+              <p class="ready-count num"><strong>{{ d.readiness.ready }}</strong> of {{ d.readiness.total }} arrivals ready</p>
+              <p class="ready-sub">Credentials prepared for {{ d.readiness.checkInAt | ptime: 'time' }} check-in</p>
+            </div>
+            <div class="progress" role="progressbar" aria-label="Arrivals ready" [attr.aria-valuenow]="d.readiness.ready" aria-valuemin="0" [attr.aria-valuemax]="d.readiness.total">
+              <span class="ready" [style.width.%]="readyPercent()"></span>
+              <span class="issues" [style.width.%]="issuePercent()"></span>
+            </div>
+            <div class="legend">
+              <span><i class="swatch ready"></i>Ready · provisioned and scheduled</span>
+              <span><i class="swatch issues"></i>Needs attention</span>
+            </div>
+
+            @if (d.readiness.issues.length) {
+              <ul class="exceptions">
+                @for (issue of d.readiness.issues; track issue.issueId) {
+                  <li>
+                    <button type="button" class="who" (click)="panels.openPerson(issue.personId)">
+                      <app-avatar [initials]="issue.initials" [seed]="issue.personId" [size]="32" />
+                      <span class="text">
+                        <strong>{{ issue.personName }} <span class="unit">· Unit {{ issue.unit }}</span></strong>
+                        <span>{{ issue.summary }}</span>
+                      </span>
+                    </button>
+                    <app-status-badge [label]="issueKindLabels[issue.kind]" tone="warning" icon="warning" />
+                    <button type="button" class="btn sm" (click)="resolve(issue.issueId)">Resolve<app-icon name="arrow-right" [size]="14" /></button>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <div class="all-clear">
+                <app-icon name="circle-check" [size]="18" />
+                <span><strong>Every arrival is ready.</strong> Credentials will activate automatically at check-in.</span>
+              </div>
+            }
+          } @else {
+            <app-skeleton [rows]="4" />
+          }
+        </div>
+      </section>
+
+      <!-- Today's stays -->
+      <section class="card table-card" aria-labelledby="today-title">
+        <div class="card-header">
+          <h2 id="today-title">Today’s {{ view() === 'arrivals' ? 'arrivals' : view() === 'departures' ? 'departures' : 'guests in house' }}</h2>
+          <div class="segmented" role="tablist" aria-label="Stay view">
+            @for (tab of tabs(); track tab.key) {
+              <button type="button" role="tab" [attr.aria-selected]="view() === tab.key" (click)="setView(tab.key)">
+                {{ tab.label }} @if (tab.count !== undefined) { <span class="count">{{ tab.count }}</span> }
+              </button>
+            }
+          </div>
+        </div>
+        <div class="toolbar">
+          <label class="search-input grow">
+            <app-icon name="search" [size]="15" />
+            <input class="input" type="search" placeholder="Search guest, unit or reservation" aria-label="Search stays"
+              [value]="search()" (input)="search.set($any($event.target).value)" />
+          </label>
+          <select class="select status" aria-label="Filter by credential status" [value]="status()" (change)="status.set($any($event.target).value)">
+            <option value="">All statuses</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="active">Active</option>
+            <option value="needsAttention">Needs attention</option>
+            <option value="expired">Expired</option>
+            <option value="revoked">Revoked</option>
+          </select>
+          @if (filtered()) {
+            <button type="button" class="btn ghost sm" (click)="clearFilters()">Clear</button>
+          }
+        </div>
+
+        @if (stays.value(); as s) {
+          @if (s.items.length) {
+            <div class="table-wrap" [class.dim]="stays.loading()">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Guest</th>
+                    <th scope="col">Unit</th>
+                    <th scope="col">Stay</th>
+                    <th scope="col">{{ view() === 'departures' ? 'Checkout' : 'Arrival' }}</th>
+                    <th scope="col">Credential</th>
+                    <th scope="col">Access group</th>
+                    <th scope="col"><span class="sr-only">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of s.items; track row.id) {
+                    <tr class="clickable" tabindex="0" (click)="open(row)" (keydown.enter)="open(row)" [attr.aria-label]="'Open ' + row.name">
+                      <td>
+                        <div class="identity">
+                          <app-avatar [initials]="row.initials" [seed]="row.id" [size]="30" />
+                          <div>
+                            <div class="name">{{ row.name }}</div>
+                            <div class="sub mono">{{ row.reservationId }}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="num unit-cell">{{ row.unit }}</td>
+                      <td class="num">{{ row.accessFrom | ptime: 'dateShort' }} <span class="muted">→</span> {{ row.accessUntil | ptime: 'dateShort' }}</td>
+                      <td class="num">{{ view() === 'departures' ? (row.accessUntil | ptime: 'time') : (row.expectedArrival | ptime: 'time') }}</td>
+                      <td><app-status-badge [status]="row.status" /></td>
+                      <td class="secondary">{{ row.accessGroup ?? '—' }}</td>
+                      <td class="right">
+                        <button type="button" class="btn ghost icon-only sm" (click)="$event.stopPropagation(); open(row)" [attr.aria-label]="'View ' + row.name">
+                          <app-icon name="chevron-right" [size]="16" />
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <div class="table-foot">
+              <span class="meta num">Showing {{ s.items.length }} of {{ s.matching }}{{ filtered() ? ' matching' : '' }}</span>
+              <a routerLink="/people" [queryParams]="viewAllLink()">{{ viewAllLabel() }} <app-icon name="arrow-right" [size]="14" /></a>
+            </div>
+          } @else {
+            <app-empty-state icon="search" title="No stays match these filters" message="Try a different name, unit or reservation ID, or clear the status filter.">
+              <button type="button" class="btn sm" (click)="clearFilters()">Clear filters</button>
+            </app-empty-state>
+          }
+        } @else if (stays.failed()) {
+          <app-empty-state icon="circle-alert" title="Couldn’t load stays" message="The demo API didn’t respond.">
+            <button type="button" class="btn sm" (click)="stays.reload()">Try again</button>
+          </app-empty-state>
+        } @else {
+          <div class="card-body"><app-skeleton [rows]="6" /></div>
+        }
+      </section>
+    </div>
+
+    <aside class="side">
+      <!-- System health -->
+      <section class="card" aria-labelledby="health-title">
+        <div class="card-header"><h2 id="health-title">System health</h2><span class="demo-chip">Simulated</span></div>
+        <div class="card-body health">
+          @if (data(); as d) {
+            <div class="health-row">
+              <span class="h-icon" [class.bad]="d.health.feedStale"><app-icon name="server" [size]="16" /></span>
+              <div class="h-text">
+                <strong>Track feed</strong>
+                @if (d.health.feedStale) {
+                  <span class="warn-text">No response · last received {{ d.health.feedLastReceivedAt | ptime: 'time' }}</span>
+                } @else {
+                  <span>Last received {{ d.health.feedLastReceivedAt | relative: d.now }}</span>
+                }
+              </div>
+              <app-status-badge [label]="d.health.feedStale ? 'Unavailable' : 'Receiving'" [tone]="d.health.feedStale ? 'warning' : 'success'" [icon]="d.health.feedStale ? 'warning' : 'circle-check'" />
+            </div>
+            <div class="health-row">
+              <span class="h-icon"><app-icon name="shield" [size]="16" /></span>
+              <div class="h-text">
+                <strong>UniFi Access</strong>
+                <span class="num">{{ d.health.accessPointsOnline }} of {{ d.health.accessPointsTotal }} access points online</span>
+              </div>
+              <app-status-badge [label]="d.health.offline.length ? 'Degraded' : 'Healthy'" [tone]="d.health.offline.length ? 'warning' : 'success'" [icon]="d.health.offline.length ? 'warning' : 'circle-check'" />
+            </div>
+            @for (point of d.health.offline; track point.id) {
+              <button type="button" class="offline-row" (click)="panels.openAccessPoint(point.id)">
+                <app-icon name="wifi-off" [size]="15" />
+                <span><strong>{{ point.name }} offline</strong> · {{ offlineFor(point.since) }}</span>
+                <app-icon name="chevron-right" [size]="14" />
+              </button>
+            }
+            @if (d.health.feedStale && d.health.upcomingArrivalsAffected) {
+              <p class="affected">{{ d.health.upcomingArrivalsAffected }} arrivals in the next 48 hours may be delayed.</p>
+            }
+            <p class="footnote">Status of the simulated environment. Healthy connectivity doesn’t mean every reservation succeeded — see Arrival readiness.</p>
+          } @else {
+            <app-skeleton [rows]="4" />
+          }
+        </div>
+      </section>
+
+      <!-- Recent activity -->
+      <section class="card" aria-labelledby="recent-title">
+        <div class="card-header">
+          <h2 id="recent-title">Recent activity</h2>
+          <a class="view-all" routerLink="/activity">View all</a>
+        </div>
+        <div class="card-body activity">
+          @if (data(); as d) {
+            <app-activity-timeline [items]="d.recentActivity" [now]="d.now" (select)="openActivity($event)" />
+          } @else {
+            <app-skeleton [rows]="6" />
+          }
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>

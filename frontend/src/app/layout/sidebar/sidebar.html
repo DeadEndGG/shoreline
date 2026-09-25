@@ -1,0 +1,64 @@
+<div class="brand">
+  <app-brand-mark [size]="28" />
+  <span class="wordmark">Shoreline <span>Access</span></span>
+</div>
+
+<div class="property">
+  <button
+    type="button"
+    class="property-button"
+    (click)="propertyMenu.set(!propertyMenu())"
+    [attr.aria-expanded]="propertyMenu()"
+    aria-haspopup="true"
+  >
+    <span class="property-glyph" aria-hidden="true">SR</span>
+    <span class="property-text">
+      <strong>{{ property()?.name ?? 'Shoreline Residences' }}</strong>
+      <span>{{ property()?.units ?? 340 }} units · {{ property()?.floors ?? 14 }} floors</span>
+    </span>
+    <app-icon name="chevron-down" [size]="14" />
+  </button>
+  @if (propertyMenu()) {
+    <div class="property-menu" role="menu">
+      <p class="menu-label">Properties</p>
+      <button type="button" role="menuitemradio" aria-checked="true" class="menu-item" (click)="propertyMenu.set(false)">
+        <span>Shoreline Residences</span><app-icon name="check" [size]="14" />
+      </button>
+      <p class="menu-note">This demo includes one property.</p>
+    </div>
+  }
+</div>
+
+<nav aria-label="Primary">
+  <ul>
+    @for (item of items; track item.path) {
+      <li>
+        <a [routerLink]="item.path" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="navigate.emit()">
+          <app-icon [name]="item.icon" [size]="17" />
+          <span>{{ item.label }}</span>
+          @if (item.path === '/sync' && attention() > 0) {
+            <span class="count num" [attr.aria-label]="attention() + ' issues need attention'">{{ attention() }}</span>
+          }
+        </a>
+      </li>
+    }
+  </ul>
+
+  <p class="section-label">Guest experience</p>
+  <ul>
+    <li>
+      <a routerLink="/guest/avery-morgan" [queryParams]="{ from: 'admin' }" (click)="navigate.emit()">
+        <app-icon name="smartphone" [size]="17" />
+        <span>Guest pass preview</span>
+        <app-icon class="trail" name="arrow-up-right" [size]="14" />
+      </a>
+    </li>
+  </ul>
+</nav>
+
+<div class="footer">
+  <div class="demo-note">
+    <app-icon name="info" [size]="14" />
+    <p>Demo environment. All data is simulated and resets when the API restarts or you reset the demo.</p>
+  </div>
+</div>

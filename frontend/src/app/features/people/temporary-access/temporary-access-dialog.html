@@ -1,0 +1,83 @@
+<app-dialog-surface
+  [open]="panels.temporaryAccess()"
+  heading="Create temporary access"
+  subheading="A bounded visitor or vendor pass with explicit locations"
+  width="600px"
+  (closed)="panels.temporaryAccess.set(false)"
+>
+  <form id="temp-form" class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="row">
+      <div class="field grow">
+        <label for="ta-name">Name</label>
+        <input id="ta-name" data-autofocus class="input" formControlName="name" placeholder="Visitor or company name" [class.invalid]="error('name')" />
+        @if (error('name'); as e) { <span class="error" role="alert"><app-icon name="circle-alert" [size]="12" />{{ e }}</span> }
+      </div>
+      <div class="field">
+        <span class="label" id="ta-type">Type</span>
+        <div class="segmented" role="radiogroup" aria-labelledby="ta-type">
+          <button type="button" role="radio" [attr.aria-pressed]="form.controls.type.value === 'visitor'" [attr.aria-checked]="form.controls.type.value === 'visitor'" (click)="form.controls.type.setValue('visitor')">Visitor</button>
+          <button type="button" role="radio" [attr.aria-pressed]="form.controls.type.value === 'vendor'" [attr.aria-checked]="form.controls.type.value === 'vendor'" (click)="form.controls.type.setValue('vendor')">Vendor</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="ta-host">{{ form.controls.type.value === 'visitor' ? 'Host unit' : 'Responsible contact' }}</label>
+      <input id="ta-host" class="input" formControlName="host" [placeholder]="form.controls.type.value === 'visitor' ? 'e.g. 1201' : 'e.g. Maintenance supervisor'" [class.invalid]="error('host')" />
+      @if (error('host'); as e) { <span class="error" role="alert"><app-icon name="circle-alert" [size]="12" />{{ e }}</span> }
+    </div>
+
+    <fieldset class="field locations">
+      <legend class="label">Permitted locations</legend>
+      @for (group of groupedPoints(); track group.category) {
+        @if (group.items.length) {
+          <div class="loc-group">
+            <span class="group-label">{{ group.label }}</span>
+            <div class="pill-group">
+              @for (p of group.items; track p.id) {
+                <button type="button" class="pill" [attr.aria-pressed]="isSelected(p.id)" (click)="togglePoint(p.id)">
+                  @if (isSelected(p.id)) { <app-icon name="check" [size]="13" [stroke]="2.2" /> }
+                  {{ p.name }}
+                  @if (!p.online) { <span class="count">offline</span> }
+                </button>
+              }
+            </div>
+          </div>
+        }
+      }
+      @if (error('accessPointIds'); as e) { <span class="error" role="alert"><app-icon name="circle-alert" [size]="12" />{{ e }}</span> }
+    </fieldset>
+
+    <div class="row">
+      <div class="field grow">
+        <label for="ta-start">Starts</label>
+        <input id="ta-start" class="input" type="datetime-local" formControlName="start" [class.invalid]="error('start')" />
+        @if (error('start'); as e) { <span class="error" role="alert">{{ e }}</span> }
+      </div>
+      <div class="field grow">
+        <label for="ta-end">Ends</label>
+        <input id="ta-end" class="input" type="datetime-local" formControlName="end" [class.invalid]="error('end')" />
+        @if (error('end'); as e) { <span class="error" role="alert"><app-icon name="circle-alert" [size]="12" />{{ e }}</span> }
+      </div>
+    </div>
+    <p class="hint">Times are property time (Central). Temporary access is limited to 14 days.</p>
+
+    <div class="field">
+      <label for="ta-reason">Reason</label>
+      <input id="ta-reason" class="input" formControlName="reason" placeholder="e.g. Window repair, family visit" [class.invalid]="error('reason')" />
+      @if (error('reason'); as e) { <span class="error" role="alert"><app-icon name="circle-alert" [size]="12" />{{ e }}</span> }
+    </div>
+
+    <div class="note info">
+      <app-icon name="info" [size]="15" />
+      <span>Creates a simulated PIN + QR pass. Real one-time-use enforcement depends on hardware validation and isn't claimed by this demo.</span>
+    </div>
+  </form>
+  <footer dialog-footer class="modal-footer">
+    <button type="button" class="btn" (click)="panels.temporaryAccess.set(false)">Cancel</button>
+    <button type="submit" form="temp-form" class="btn primary" [disabled]="saving()">
+      @if (saving()) { <span class="spinner"></span> } @else { <app-icon name="plus" [size]="15" /> }
+      Create access
+    </button>
+  </footer>
+</app-dialog-surface>

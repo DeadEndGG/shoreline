@@ -1,0 +1,85 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Activity</h1>
+      <p class="subtitle">The audit trail tying access events, credential changes, sync runs and manual exceptions together.</p>
+    </div>
+  </header>
+
+  <section class="card log">
+    <div class="toolbar">
+      <div class="pill-group" role="group" aria-label="Filter by category">
+        <button type="button" class="pill" [attr.aria-pressed]="!category()" (click)="category.set(null)">All</button>
+        @for (c of categories; track c.key) {
+          <button type="button" class="pill" [attr.aria-pressed]="category() === c.key" (click)="category.set(c.key)">
+            <app-icon [name]="c.icon" [size]="13" />{{ c.label }}
+            <span class="count">{{ activity.value()?.categoryCounts?.[c.key] ?? 0 }}</span>
+          </button>
+        }
+        <button type="button" class="pill" [attr.aria-pressed]="deniedOnly()" (click)="deniedOnly.set(!deniedOnly())"><app-icon name="ban" [size]="13" />Denied only</button>
+      </div>
+      <span class="spacer"></span>
+      <label class="search-input search">
+        <app-icon name="search" [size]="15" />
+        <input class="input" type="search" placeholder="Search person, unit, location…" aria-label="Search activity" [value]="search()" (input)="search.set($any($event.target).value)" />
+      </label>
+    </div>
+
+    @if (activity.value(); as r) {
+      @if (r.items.length) {
+        <div class="table-wrap" [class.dim]="activity.loading()">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Time</th>
+                <th scope="col">Event</th>
+                <th scope="col">Identity</th>
+                <th scope="col">Unit</th>
+                <th scope="col">Location</th>
+                <th scope="col">Source</th>
+                <th scope="col">Result</th>
+              </tr>
+            </thead>
+            @for (day of days(); track day.key) {
+              <tbody>
+                <tr class="day-row"><th colspan="7" scope="colgroup">{{ day.label | ptime: 'long' }}</th></tr>
+                @for (row of day.rows; track row.event.id) {
+                  <tr [class.clickable]="row.event.personId || row.event.accessPointId" [attr.tabindex]="row.event.personId || row.event.accessPointId ? 0 : null"
+                    (click)="open(row.event)" (keydown.enter)="open(row.event)" [class.denied]="row.event.result === 'denied'">
+                    <td class="num time">{{ row.event.at | ptime: 'time' }}</td>
+                    <td class="event">
+                      <span class="ev-icon" [class]="row.event.result"><app-icon [name]="icon(row.event)" [size]="14" /></span>
+                      <div>
+                        <div class="ev-title">{{ row.event.title }}</div>
+                        @if (row.event.detail) { <div class="ev-detail">{{ row.event.detail }}</div> }
+                      </div>
+                    </td>
+                    <td>{{ row.event.personName ?? '—' }}</td>
+                    <td class="num">{{ row.event.unit ?? '—' }}</td>
+                    <td class="secondary">{{ row.event.accessPointName ?? '—' }}</td>
+                    <td class="secondary">{{ row.source }}</td>
+                    <td><app-status-badge [label]="resultMeta[row.event.result].label" [tone]="resultMeta[row.event.result].tone" [icon]="resultMeta[row.event.result].icon" /></td>
+                  </tr>
+                }
+              </tbody>
+            }
+          </table>
+        </div>
+        <div class="table-foot">
+          <span class="meta num">Showing {{ r.items.length }} of {{ r.matching }} events</span>
+          @if (r.items.length < r.matching) {
+            <button type="button" class="btn sm" (click)="limit.set(limit() + 60)">Load older events</button>
+          }
+        </div>
+      } @else {
+        <app-empty-state icon="history" title="No events match" message="Nothing in the audit trail fits these filters yet. Try another category or clear the search.">
+          <button type="button" class="btn sm" (click)="clear()">Clear filters</button>
+        </app-empty-state>
+      }
+    } @else if (activity.failed()) {
+      <app-empty-state icon="circle-alert" title="Couldn’t load activity"><button type="button" class="btn sm" (click)="activity.reload()">Try again</button></app-empty-state>
+    } @else {
+      <div class="card-body"><app-skeleton [rows]="10" /></div>
+    }
+  </section>
+</div>

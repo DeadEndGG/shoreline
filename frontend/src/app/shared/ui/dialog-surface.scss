@@ -1,0 +1,113 @@
+dialog {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+
+  &::backdrop {
+    background: rgb(15 23 42 / 28%);
+    backdrop-filter: blur(1.5px);
+    animation: fade-in var(--dur-base) ease;
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  box-shadow: var(--shadow-overlay);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+
+  .titles {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sub {
+    margin-top: 2px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .close {
+    margin: -4px -8px 0 0;
+  }
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+// ── Modal ──────────────────────────────────────────────────────────────────
+dialog.modal {
+  width: min(var(--dialog-width), calc(100vw - 32px));
+  margin: auto;
+
+  .shell {
+    max-height: calc(100dvh - 64px);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    animation: modal-in var(--dur-base) var(--ease-out);
+  }
+
+  .body {
+    padding: 20px 24px;
+  }
+}
+
+// ── Drawer ─────────────────────────────────────────────────────────────────
+dialog.drawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(var(--dialog-width), 100vw);
+  height: 100dvh;
+  margin: 0;
+
+  .shell {
+    height: 100%;
+    border-left: 1px solid var(--border);
+    animation: drawer-in var(--dur-drawer) var(--ease-out);
+  }
+
+  @media (max-width: 640px) {
+    width: 100vw;
+
+    .shell {
+      border-left: 0;
+    }
+  }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    opacity: 0.4;
+    transform: translateX(32px);
+  }
+}

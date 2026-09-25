@@ -1,0 +1,85 @@
+<div class="top">
+  <button type="button" class="who" (click)="panels.openPerson(issue().personId)">
+    <app-avatar [initials]="issue().initials" [seed]="issue().personId" [size]="36" />
+    <span class="who-text">
+      <strong>{{ issue().personName }}</strong>
+      <span>Unit {{ issue().unit }}@if (issue().checkIn) { · arrives {{ issue().checkIn | ptime: 'weekdayDate' }}, {{ issue().checkIn | ptime: 'time' }} }</span>
+    </span>
+  </button>
+  @if (issue().resolvedAt) {
+    <app-status-badge label="Resolved" tone="success" icon="circle-check" />
+  } @else {
+    <app-status-badge [label]="kindLabels[issue().kind]" tone="warning" icon="warning" />
+  }
+</div>
+
+<p class="summary">{{ issue().summary }}</p>
+
+@if (issue().resolvedAt) {
+  <p class="resolution"><app-icon name="check" [size]="14" [stroke]="2.2" />{{ issue().resolution }} · {{ issue().resolvedAt | ptime: 'time' }}</p>
+} @else {
+  <p class="next"><app-icon name="arrow-right" [size]="14" />{{ issue().nextAction }}</p>
+
+  @switch (issue().action) {
+    @case ('map') {
+      <fieldset class="choices">
+        <legend class="sr-only">Access group for Unit {{ issue().unit }}</legend>
+        @for (g of groups(); track g.id) {
+          <label class="choice" [class.selected]="groupId() === g.id">
+            <input type="radio" [name]="'group-' + issue().id" [value]="g.id" [checked]="groupId() === g.id" (change)="groupId.set(g.id)" />
+            <span class="choice-text">
+              <strong>{{ g.name }}</strong>
+              <span>{{ g.description }} · {{ g.accessPoints }} locations</span>
+            </span>
+          </label>
+        }
+      </fieldset>
+    }
+    @case ('choose') {
+      <fieldset class="choices two">
+        <legend class="sr-only">Reservation to keep</legend>
+        @for (c of issue().candidates; track c.reservationId) {
+          <label class="choice" [class.selected]="reservationId() === c.reservationId">
+            <input type="radio" [name]="'res-' + issue().id" [value]="c.reservationId" [checked]="reservationId() === c.reservationId" (change)="reservationId.set(c.reservationId)" />
+            <span class="choice-text">
+              <strong class="mono">{{ c.reservationId }}</strong>
+              <span class="num">{{ c.checkIn | ptime: 'dateShort' }} → {{ c.checkOut | ptime: 'dateShort' }} · {{ c.guests }} guests</span>
+              <span>{{ c.note }}</span>
+              <span class="received">Received {{ c.receivedAt | ptime: 'dateTime' }}</span>
+            </span>
+          </label>
+        }
+      </fieldset>
+    }
+  }
+
+  <div class="actions">
+    <button type="button" class="btn ghost sm" (click)="showAttempts.set(!showAttempts())" [attr.aria-expanded]="showAttempts()">
+      <app-icon name="history" [size]="14" />{{ issue().attempts.length }} attempt{{ issue().attempts.length === 1 ? '' : 's' }}
+    </button>
+    <span class="grow"></span>
+    <button type="button" class="btn primary sm" [disabled]="working() || !canAct()" (click)="act()">
+      @if (working()) { <span class="spinner"></span> }
+      @switch (issue().action) {
+        @case ('map') { Assign group &amp; provision }
+        @case ('choose') { Keep selected reservation }
+        @default { Retry provisioning }
+      }
+    </button>
+  </div>
+  @if (issue().action !== 'retry' && !canAct()) {
+    <p class="hint">{{ issue().action === 'map' ? 'Choose an access group to continue.' : 'Choose which reservation to keep.' }}</p>
+  }
+}
+
+@if (showAttempts() || issue().resolvedAt) {
+  <ol class="attempts" [class.compact]="!showAttempts()">
+    @for (a of (showAttempts() ? issue().attempts : issue().attempts.slice(0, 1)); track $index) {
+      <li [class.ok]="a.succeeded">
+        <app-icon [name]="a.succeeded ? 'circle-check' : 'circle-x'" [size]="14" />
+        <span class="num when">{{ a.at | ptime: 'time' }}</span>
+        <span>{{ a.detail }}</span>
+      </li>
+    }
+  </ol>
+}

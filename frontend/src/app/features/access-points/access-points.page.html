@@ -1,0 +1,105 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Access points</h1>
+      <p class="subtitle num">
+        @if (points.value(); as r) { {{ r.online }} of {{ r.total }} online · } Doors, gates and amenity rooms connected to UniFi Access (simulated)
+      </p>
+    </div>
+  </header>
+
+  <div class="bar">
+    <div class="pill-group" role="group" aria-label="Filter by area">
+      <button type="button" class="pill" [attr.aria-pressed]="!category()" (click)="category.set(null)">All <span class="count">{{ allCount() }}</span></button>
+      @for (c of categories; track c) {
+        <button type="button" class="pill" [attr.aria-pressed]="category() === c" (click)="category.set(c)">
+          {{ categoryLabels[c] }} <span class="count">{{ points.value()?.categoryCounts?.[c] ?? 0 }}</span>
+        </button>
+      }
+    </div>
+    <div class="segmented" role="group" aria-label="Layout">
+      <button type="button" [attr.aria-pressed]="layout() === 'grid'" (click)="setLayout('grid')" aria-label="Grid view"><app-icon name="grid" [size]="15" /></button>
+      <button type="button" [attr.aria-pressed]="layout() === 'table'" (click)="setLayout('table')" aria-label="Table view"><app-icon name="list" [size]="15" /></button>
+    </div>
+  </div>
+
+  @if (points.value(); as r) {
+    @if (layout() === 'grid') {
+      <div class="grid">
+        @for (p of r.items; track p.id) {
+          <button type="button" class="card point" [class.offline]="!p.online" (click)="panels.openAccessPoint(p.id)">
+            <div class="point-head">
+              <span class="point-icon"><app-icon [name]="icon(p.id)" [size]="18" /></span>
+              @if (p.online) {
+                <app-status-badge label="Online" tone="success" icon="wifi" />
+              } @else {
+                <app-status-badge [label]="'Offline · ' + offlineFor(p.offlineSince)" tone="warning" icon="wifi-off" />
+              }
+            </div>
+            <strong class="point-name">{{ p.name }}</strong>
+            <span class="point-loc">{{ categoryLabels[p.category] }} · {{ p.location }}</span>
+            <div class="groups">
+              @for (g of p.groups.slice(0, 2); track g) { <span class="group">{{ g }}</span> }
+              @if (p.groups.length > 2) { <span class="group more">+{{ p.groups.length - 2 }}</span> }
+            </div>
+            <div class="point-foot">
+              @if (p.lastActivity; as a) {
+                <span class="last" [class.denied]="a.result === 'denied'">{{ a.title }}@if (a.personName) { · {{ a.personName }} }</span>
+                <time class="num">{{ a.at | relative: demo.now() }}</time>
+              } @else {
+                <span class="last">No activity yet</span>
+              }
+            </div>
+          </button>
+        } @empty {
+          <app-empty-state icon="door" title="No access points in this area" />
+        }
+      </div>
+    } @else {
+      <section class="card table-card">
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Access point</th>
+                <th scope="col">Area</th>
+                <th scope="col">Status</th>
+                <th scope="col">Groups</th>
+                <th scope="col" class="right">Entries today</th>
+                <th scope="col">Last activity</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of r.items; track p.id) {
+                <tr class="clickable" tabindex="0" (click)="panels.openAccessPoint(p.id)" (keydown.enter)="panels.openAccessPoint(p.id)">
+                  <td>
+                    <div class="identity">
+                      <span class="point-icon sm"><app-icon [name]="icon(p.id)" [size]="15" /></span>
+                      <div><div class="name">{{ p.name }}</div><div class="sub">{{ p.location }}</div></div>
+                    </div>
+                  </td>
+                  <td class="secondary">{{ categoryLabels[p.category] }}</td>
+                  <td>
+                    @if (p.online) { <app-status-badge label="Online" tone="success" icon="wifi" /> }
+                    @else { <app-status-badge [label]="'Offline · ' + offlineFor(p.offlineSince)" tone="warning" icon="wifi-off" /> }
+                  </td>
+                  <td class="secondary num">{{ p.groups.length }}</td>
+                  <td class="num right">{{ p.entriesToday }}</td>
+                  <td class="secondary">
+                    @if (p.lastActivity; as a) { {{ a.title }} · <span class="num">{{ a.at | ptime: 'time' }}</span> } @else { — }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+  } @else if (points.failed()) {
+    <div class="card"><app-empty-state icon="circle-alert" title="Couldn’t load access points"><button type="button" class="btn sm" (click)="points.reload()">Try again</button></app-empty-state></div>
+  } @else {
+    <div class="card card-body"><app-skeleton [rows]="8" /></div>
+  }
+
+  <p class="future"><app-icon name="info" [size]="14" /><span><strong>Future expansion:</strong> UniFi Protect cameras, intercom and vehicle access could join this view after hardware validation. Door unlock controls are intentionally out of scope.</span></p>
+</div>

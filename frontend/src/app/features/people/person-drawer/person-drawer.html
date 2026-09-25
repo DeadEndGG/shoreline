@@ -1,0 +1,262 @@
+<app-dialog-surface
+  variant="drawer"
+  width="540px"
+  [open]="!!panels.personId()"
+  [heading]="person()?.summary?.name ?? 'Loading…'"
+  [subheading]="person() ? typeLabels[person()!.summary.type] + (person()!.summary.unit ? ' · Unit ' + person()!.summary.unit : person()!.summary.role ? ' · ' + person()!.summary.role : '') : null"
+  (closed)="close()"
+>
+  @if (person(); as p) {
+    <div class="drawer-body">
+      <!-- 1. Identity -->
+      <section class="identity-block">
+        <app-avatar [initials]="p.summary.initials" [seed]="p.summary.id" [size]="48" />
+        <div class="id-text">
+          <div class="id-line"><app-status-badge [status]="p.summary.status" /></div>
+          <span class="contact">{{ p.email }} · {{ p.phone }}</span>
+        </div>
+      </section>
+
+      @if (p.issue; as issue) {
+        <div class="note warning issue">
+          <app-icon name="warning" [size]="16" />
+          <div>
+            <strong>{{ issueKindLabels[issue.kind] }}.</strong> {{ issue.summary }}
+            <p class="next">{{ issue.nextAction }}</p>
+          </div>
+          <a class="btn sm" routerLink="/sync" [queryParams]="{ issue: issue.id }" (click)="close()">Resolve</a>
+        </div>
+      }
+
+      @if (p.summary.status === 'revoked' && p.credential?.revokeReason) {
+        <div class="note danger">
+          <app-icon name="ban" [size]="16" />
+          <span><strong>Revoked {{ p.credential!.revokedAt | ptime: 'dateTime' }}.</strong> {{ p.credential!.revokeReason }}</span>
+        </div>
+      }
+
+      <!-- 2-3. Reservation & stay -->
+      @if (p.stay; as stay) {
+        <section class="section">
+          <h3>{{ stay.isShortTerm ? 'Reservation' : 'Lease' }}</h3>
+          <dl class="facts">
+            <div><dt>Source</dt><dd>{{ stay.source }}</dd></div>
+            <div><dt>{{ stay.isShortTerm ? 'Reservation ID' : 'Agreement' }}</dt><dd class="mono">{{ stay.reservationId }}</dd></div>
+            <div><dt>{{ stay.isShortTerm ? 'Check-in' : 'Lease start' }}</dt><dd class="num">{{ stay.checkIn | ptime: 'weekdayDate' }} · {{ stay.checkIn | ptime: 'time' }}</dd></div>
+            <div><dt>{{ stay.isShortTerm ? 'Check-out' : 'Lease end' }}</dt><dd class="num">{{ stay.checkOut | ptime: 'weekdayDate' }} · {{ stay.checkOut | ptime: 'time' }}</dd></div>
+            @if (stay.expectedArrival) {
+              <div><dt>Expected arrival</dt><dd class="num">{{ stay.expectedArrival | ptime: 'time' }}</dd></div>
+            }
+            <div><dt>Guests</dt><dd class="num">{{ stay.guests }}</dd></div>
+          </dl>
+          <p class="tz-note">Times shown in property time (Central).</p>
+        </section>
+      }
+
+      <!-- 4. Credential -->
+      @if (p.credential; as c) {
+        <section class="section">
+          <div class="section-head">
+            <h3>Credential</h3>
+            @if (p.actions.hasGuestPass) {
+              <button type="button" class="btn sm" (click)="openSub('pass')"><app-icon name="smartphone" [size]="15" />Preview guest pass</button>
+            }
+          </div>
+          <app-credential-card
+            [pin]="c.pin"
+            [qrPayload]="c.qrPayload"
+            [method]="c.methodLabel + (c.accessGroup ? ' · ' + c.accessGroup : '')"
+            [usable]="p.summary.status === 'scheduled' || p.summary.status === 'active'"
+            [unusableIcon]="unusableIcon(p.summary.status)"
+          >
+            <span class="window num">
+              {{ c.validFrom | ptime: 'dateTime' }} → {{ c.validUntil ? (c.validUntil | ptime: 'dateTime') : 'No end date' }}
+            </span>
+            @if (c.schedule) {
+              <span class="window">{{ c.schedule }} · <strong [class.on]="c.canEnterNow">{{ c.canEnterNow ? 'On schedule now' : 'Outside schedule now' }}</strong></span>
+            }
+          </app-credential-card>
+          @if (c.provisioning !== 'succeeded') {
+            <p class="prov-note"><app-icon name="circle-alert" [size]="14" />Not provisioned — no usable credential exists yet. {{ c.provisioningError }}</p>
+          }
+        </section>
+      }
+
+      <!-- 5. Locations -->
+      @if (p.locations.length) {
+        <section class="section">
+          <h3>Permitted locations <span class="count num">{{ p.locations.length }}</span></h3>
+          <ul class="locations">
+            @for (loc of p.locations; track loc.id) {
+              <li>
+                <button type="button" (click)="panels.openAccessPoint(loc.id)">
+                  <span class="loc-name">{{ loc.name }}</span>
+                  <span class="loc-place">{{ categoryLabels[loc.category] }} · {{ loc.place }}</span>
+                  @if (!loc.online) { <app-status-badge label="Offline" tone="warning" icon="wifi-off" /> }
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <!-- 6. Lifecycle -->
+      <section class="section">
+        <h3>Lifecycle</h3>
+        <ol class="lifecycle">
+          @for (step of p.lifecycle; track step.key) {
+            <li [class]="step.state">
+              <span class="marker"><app-icon [name]="stepIcon(step.state)" [size]="12" [stroke]="2.4" /></span>
+              <div class="step-text">
+                <div class="step-line">
+                  <strong>{{ step.label }}</strong>
+                  @if (step.at) { <time class="num">{{ step.at | ptime: 'dateTime' }}</time> }
+                </div>
+                @if (step.detail) { <span>{{ step.detail }}</span> }
+              </div>
+            </li>
+          }
+        </ol>
+      </section>
+
+      <!-- Activity -->
+      @if (p.activity.length) {
+        <section class="section">
+          <h3>Recent activity</h3>
+          <app-activity-timeline [items]="p.activity" [now]="demo.now()" [showDetail]="true" (select)="openActivity($event)" />
+        </section>
+      }
+    </div>
+  } @else if (failed()) {
+    <div class="drawer-body"><div class="note danger"><app-icon name="circle-alert" [size]="16" />This record couldn’t be loaded.</div></div>
+  } @else {
+    <div class="drawer-body"><app-skeleton [rows]="10" /></div>
+  }
+
+  <!-- 7. Actions -->
+  <footer dialog-footer class="drawer-footer">
+    @if (person(); as p) {
+      <button type="button" class="btn" (click)="openSub('message')" [disabled]="!p.credential"><app-icon name="mail" [size]="15" />Preview message</button>
+      <button type="button" class="btn" (click)="openSub('extend')" [disabled]="!p.actions.canExtend" [title]="p.actions.extendDisabledReason ?? ''">
+        <app-icon name="calendar-plus" [size]="15" />Extend access
+      </button>
+      <span class="grow"></span>
+      <button type="button" class="btn danger-outline" (click)="openSub('revoke')" [disabled]="!p.actions.canRevoke" [title]="p.actions.revokeDisabledReason ?? ''">
+        <app-icon name="ban" [size]="15" />Revoke access
+      </button>
+      @if (!p.actions.canExtend && p.actions.extendDisabledReason) {
+        <p class="disabled-reason">{{ p.actions.extendDisabledReason }}</p>
+      }
+    }
+  </footer>
+</app-dialog-surface>
+
+<!-- Guest pass preview -->
+<app-dialog-surface [open]="sub() === 'pass'" heading="Guest pass preview" subheading="Exactly what the guest sees on their phone" width="460px" (closed)="sub.set(null)">
+  <div class="phone">
+    <div class="phone-notch"></div>
+    <div class="phone-screen">
+      @if (passValue(); as pv) { <app-pass-view [pass]="pv" /> } @else { <div class="pad"><app-skeleton [rows]="8" /></div> }
+    </div>
+  </div>
+  <footer dialog-footer class="modal-footer">
+    <button type="button" class="btn" (click)="sub.set(null)">Close</button>
+    <button type="button" class="btn primary" (click)="openFullPass()"><app-icon name="external-link" [size]="15" />Open full page</button>
+  </footer>
+</app-dialog-surface>
+
+<!-- Message preview -->
+<app-dialog-surface [open]="sub() === 'message'" heading="Guest message preview" subheading="Preview only — nothing is sent from this demo" width="560px" (closed)="sub.set(null)">
+  <div class="segmented channel" role="tablist" aria-label="Channel">
+    <button type="button" role="tab" [attr.aria-selected]="channel() === 'email'" (click)="channel.set('email')"><app-icon name="mail" [size]="14" />Email</button>
+    <button type="button" role="tab" [attr.aria-selected]="channel() === 'sms'" (click)="channel.set('sms')"><app-icon name="message" [size]="14" />SMS</button>
+  </div>
+  @if (messageValue(); as m) {
+    @if (channel() === 'email') {
+      <div class="email">
+        <dl class="email-head">
+          <div><dt>From</dt><dd>{{ m.email.from }}</dd></div>
+          <div><dt>To</dt><dd>{{ m.email.to }}</dd></div>
+          <div><dt>Subject</dt><dd><strong>{{ m.email.subject }}</strong></dd></div>
+        </dl>
+        <div class="email-body">
+          <div class="email-brand"><span class="mini-mark"></span>Shoreline Residences</div>
+          @for (para of m.email.paragraphs; track $index) { <p>{{ para }}</p> }
+          @if (person()?.summary?.status === 'scheduled' || person()?.summary?.status === 'active') {
+            <span class="email-cta">View your digital pass</span>
+          }
+          <p class="email-sign">— The Shoreline Residences front desk</p>
+        </div>
+      </div>
+    } @else {
+      <div class="sms">
+        <p class="sms-to">To {{ m.sms.to }}</p>
+        <div class="bubble">{{ m.sms.text }}</div>
+      </div>
+    }
+    @if (m.lastResentAt) { <p class="meta resent">Last simulated resend {{ m.lastResentAt | relative: demo.now() }}</p> }
+    @if (!m.canResend) { <p class="meta resent">{{ m.resendDisabledReason }}</p> }
+  } @else {
+    <app-skeleton [rows]="6" />
+  }
+  <footer dialog-footer class="modal-footer">
+    <button type="button" class="btn" (click)="sub.set(null)">Close</button>
+    <button type="button" class="btn primary" (click)="resend()" [disabled]="saving() || !messageValue()?.canResend">
+      @if (saving()) { <span class="spinner"></span> } @else { <app-icon name="send" [size]="15" /> }
+      Simulate resend
+    </button>
+  </footer>
+</app-dialog-surface>
+
+<!-- Extend -->
+<app-dialog-surface [open]="sub() === 'extend'" heading="Extend access" [subheading]="person()?.summary?.name ?? null" width="440px" (closed)="sub.set(null)">
+  <form id="extend-form" class="form" [formGroup]="extendForm" (ngSubmit)="submitExtend()">
+    <p class="secondary">Currently ends <strong class="num">{{ person()?.credential?.validUntil | ptime: 'dateTime' }}</strong>. The stay and credential update together.</p>
+    <div class="field">
+      <label for="extend-until">New end (property time)</label>
+      <input id="extend-until" data-autofocus class="input" type="datetime-local" formControlName="until"
+        [class.invalid]="extendError() || (extendForm.controls.until.touched && extendForm.controls.until.invalid)" />
+      @if (extendError()) { <span class="error" role="alert"><app-icon name="circle-alert" [size]="12" />{{ extendError() }}</span> }
+      @else if (extendForm.controls.until.touched && extendForm.controls.until.invalid) { <span class="error" role="alert">Choose a new end date and time.</span> }
+    </div>
+    <div class="field">
+      <label for="extend-note">Note <span class="muted">(optional)</span></label>
+      <input id="extend-note" class="input" formControlName="note" placeholder="e.g. Late checkout approved by owner" />
+    </div>
+  </form>
+  <footer dialog-footer class="modal-footer">
+    <button type="button" class="btn" (click)="sub.set(null)">Cancel</button>
+    <button type="submit" form="extend-form" class="btn primary" [disabled]="saving()">
+      @if (saving()) { <span class="spinner"></span> } Extend access
+    </button>
+  </footer>
+</app-dialog-surface>
+
+<!-- Revoke -->
+<app-dialog-surface [open]="sub() === 'revoke'" heading="Revoke access" [subheading]="person()?.summary?.name ?? null" width="460px" (closed)="sub.set(null)">
+  <form id="revoke-form" class="form" [formGroup]="revokeForm" (ngSubmit)="submitRevoke()">
+    <div class="note danger"><app-icon name="warning" [size]="16" /><span>The credential stops working immediately and stays revoked even if the stay is still in progress. This is recorded in the audit log.</span></div>
+    <div class="field">
+      <label for="revoke-reason">Reason</label>
+      <div class="pill-group reasons">
+        @for (r of revokeReasons; track r) {
+          <button type="button" class="pill" [attr.aria-pressed]="revokeForm.controls.reason.value === r" (click)="revokeForm.controls.reason.setValue(r)">{{ r }}</button>
+        }
+      </div>
+      <textarea id="revoke-reason" data-autofocus class="textarea" formControlName="reason" rows="2" placeholder="Describe why access is being revoked"
+        [class.invalid]="revokeForm.controls.reason.touched && revokeForm.controls.reason.invalid"></textarea>
+      @if (revokeForm.controls.reason.touched && revokeForm.controls.reason.invalid) { <span class="error" role="alert">Add a short reason for the audit log.</span> }
+    </div>
+    <label class="confirm">
+      <input type="checkbox" formControlName="confirm" />
+      <span>I understand {{ person()?.summary?.name }} will lose access immediately.</span>
+    </label>
+    @if (revokeError()) { <span class="error" role="alert">{{ revokeError() }}</span> }
+  </form>
+  <footer dialog-footer class="modal-footer">
+    <button type="button" class="btn" (click)="sub.set(null)">Cancel</button>
+    <button type="submit" form="revoke-form" class="btn danger" [disabled]="saving() || revokeForm.invalid">
+      @if (saving()) { <span class="spinner"></span> } Revoke access
+    </button>
+  </footer>
+</app-dialog-surface>

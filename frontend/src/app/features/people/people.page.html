@@ -1,0 +1,114 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Guests &amp; residents</h1>
+      <p class="subtitle">Sample occupants with building access. The property has 340 units; this directory covers demo records only.</p>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn primary" (click)="panels.temporaryAccess.set(true)"><app-icon name="plus" [size]="16" />Create temporary access</button>
+    </div>
+  </header>
+
+  <section class="card directory">
+    <div class="toolbar">
+      <label class="search-input search">
+        <app-icon name="search" [size]="15" />
+        <input class="input" type="search" placeholder="Search name, unit or reservation ID" aria-label="Search directory"
+          [value]="searchText()" (input)="searchText.set($any($event.target).value)" />
+      </label>
+      <select class="select status" aria-label="Filter by status" [value]="status() ?? ''" (change)="setStatus($any($event.target).value)">
+        <option value="">All statuses</option>
+        <option value="scheduled">Scheduled</option>
+        <option value="active">Active</option>
+        <option value="needsAttention">Needs attention</option>
+        <option value="expired">Expired</option>
+        <option value="revoked">Revoked</option>
+      </select>
+      @if (segment(); as s) {
+        <span class="segment-chip">
+          <app-icon name="sliders" [size]="13" />{{ segmentLabels[s] }}
+          <button type="button" (click)="clearSegment()" [attr.aria-label]="'Remove filter ' + segmentLabels[s]"><app-icon name="x" [size]="13" /></button>
+        </span>
+      }
+      <span class="spacer"></span>
+      <span class="meta num results">{{ people.value()?.matching ?? '–' }} result{{ people.value()?.matching === 1 ? '' : 's' }}</span>
+      @if (hasFilters()) { <button type="button" class="btn ghost sm" (click)="clearAll()">Clear filters</button> }
+    </div>
+    <div class="types pill-group" role="group" aria-label="Filter by type">
+      <button type="button" class="pill" [attr.aria-pressed]="!type()" (click)="setType(null)">All <span class="count">{{ totalForPopulation() }}</span></button>
+      @for (t of types; track t) {
+        <button type="button" class="pill" [attr.aria-pressed]="type() === t" (click)="setType(t)">
+          {{ pluralLabels[t] }} <span class="count">{{ people.value()?.typeCounts?.[t] ?? 0 }}</span>
+        </button>
+      }
+    </div>
+
+    @if (people.value(); as r) {
+      @if (r.items.length) {
+        <div class="table-wrap" [class.dim]="people.loading()">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Unit or role</th>
+                <th scope="col">Type</th>
+                <th scope="col">Access window</th>
+                <th scope="col">Method</th>
+                <th scope="col">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of r.items; track row.id) {
+                <tr class="clickable" tabindex="0" (click)="panels.openPerson(row.id)" (keydown.enter)="panels.openPerson(row.id)">
+                  <td>
+                    <div class="identity">
+                      <app-avatar [initials]="row.initials" [seed]="row.id" [size]="32" />
+                      <div>
+                        <div class="name">{{ row.name }}</div>
+                        <div class="sub mono">{{ row.reservationId ?? '—' }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{{ row.unit ? 'Unit ' + row.unit : row.role }}</td>
+                  <td class="secondary">{{ typeLabels[row.type] }}</td>
+                  <td class="num secondary">
+                    @if (row.schedule) {
+                      {{ row.schedule }}
+                    } @else if (row.accessUntil) {
+                      {{ row.accessFrom | ptime: 'dateTime' }} → {{ row.accessUntil | ptime: 'dateTime' }}
+                    } @else {
+                      Ongoing · since {{ row.accessFrom | ptime: 'date' }}
+                    }
+                  </td>
+                  <td class="secondary">{{ row.method ? methodLabels[row.method] : '—' }}</td>
+                  <td>
+                    <app-status-badge [status]="row.status" />
+                    @if (row.hasOpenIssue) { <span class="sr-only">Has an open sync issue</span> }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="table-foot">
+          <span class="meta num">{{ rangeLabel() }}</span>
+          <div class="pager">
+            <button type="button" class="btn sm" [disabled]="!canPrev()" (click)="goPage(-1)"><app-icon name="chevron-left" [size]="14" />Previous</button>
+            <button type="button" class="btn sm" [disabled]="!canNext()" (click)="goPage(1)">Next<app-icon name="chevron-right" [size]="14" /></button>
+          </div>
+        </div>
+      } @else {
+        <app-empty-state icon="users" title="No one matches these filters"
+          [message]="q() ? 'Nothing found for “' + q() + '”. Try a name, unit number like 807, or a reservation ID.' : 'Try another type or status.'">
+          <button type="button" class="btn sm" (click)="clearAll()">Clear filters</button>
+        </app-empty-state>
+      }
+    } @else if (people.failed()) {
+      <app-empty-state icon="circle-alert" title="Couldn’t load the directory" message="The demo API didn’t respond.">
+        <button type="button" class="btn sm" (click)="people.reload()">Try again</button>
+      </app-empty-state>
+    } @else {
+      <div class="card-body"><app-skeleton [rows]="8" /></div>
+    }
+  </section>
+</div>

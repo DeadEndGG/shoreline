@@ -34,7 +34,8 @@ app.UseStaticFiles();
 
 app.MapEndpoints();
 app.MapGet("/api/health", () => TypedResults.Ok(new { status = "ok" })).WithTags("Health");
-app.MapFallbackToFile("{*path:regex(^(?!api/).*$)}", "index.html");
+// SPA fallback for non-file paths outside /api (hash routing makes this mostly a safety net).
+app.MapFallbackToFile("{*path:nonfile:regex(^(?!api/).*$)}", "index.html");
 
 app.Run();
 

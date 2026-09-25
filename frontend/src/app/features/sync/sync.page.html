@@ -1,0 +1,170 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Sync center</h1>
+      <p class="subtitle">How reservations become building access — and what needs a decision.</p>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn primary" (click)="runSync()" [disabled]="running()">
+        @if (running()) { <span class="spinner"></span> Running… } @else { <app-icon name="play" [size]="15" />Run demo sync }
+      </button>
+    </div>
+  </header>
+
+  @if (data(); as d) {
+    @if (d.scenario === 'feedUnavailable') {
+      <div class="note warning" role="status">
+        <app-icon name="warning" [size]="16" />
+        <span><strong>Some upcoming arrivals may need attention. Existing access status requires confirmation.</strong>
+          The demo reservation feed hasn’t responded since {{ d.stats.feedLastReceivedAt | ptime: 'time' }}. Credentials already prepared are unchanged; new bookings and changes are delayed.</span>
+      </div>
+    }
+    @if (d.scenario === 'provisioningInterrupted') {
+      <div class="note warning" role="status">
+        <app-icon name="circle-pause" [size]="16" />
+        <span><strong>Credential writes are interrupted.</strong> New reservations stay pending — never active — until provisioning is confirmed. Retries will fail until the connection is restored.</span>
+      </div>
+    }
+
+    <!-- Pipeline -->
+    <section class="card pipeline" aria-label="Integration pipeline">
+      @for (stage of d.pipeline; track stage.key; let last = $last) {
+        <div class="stage" [class]="stage.health">
+          <span class="stage-icon"><app-icon [name]="stage.key === 'source' ? 'server' : stage.key === 'unifi' ? 'shield' : 'refresh'" [size]="18" /></span>
+          <div class="stage-text">
+            <strong>{{ stage.name }}</strong>
+            <span class="caption">{{ stage.caption }}</span>
+            <span class="state"><app-icon [name]="stageIcon(stage.health)" [size]="13" [stroke]="2" />{{ stage.status }}</span>
+          </div>
+        </div>
+        @if (!last) { <div class="connector" aria-hidden="true"><app-icon name="arrow-right" [size]="16" /></div> }
+      }
+    </section>
+
+    <!-- Stats -->
+    <section class="stats" aria-label="Sync statistics">
+      <div class="card stat">
+        <span class="label">Last successful run</span>
+        <strong class="num">{{ d.stats.lastSuccessfulRun ? (d.stats.lastSuccessfulRun | ptime: 'time') : '—' }}</strong>
+        <span class="meta">{{ d.stats.lastSuccessfulRun | relative: demo.now() }}</span>
+      </div>
+      <div class="card stat">
+        <span class="label">Next scheduled run</span>
+        <strong class="num">{{ d.stats.nextScheduledRun | ptime: 'time' }}</strong>
+        <span class="meta">Every 15 minutes</span>
+      </div>
+      <div class="card stat">
+        <span class="label">Processed records</span>
+        <strong class="num">{{ d.stats.processedRecords }}</strong>
+        <span class="meta">Reservations in the last run</span>
+      </div>
+      <div class="card stat" [class.attention]="d.stats.unresolvedFailures > 0">
+        <span class="label">Unresolved failures</span>
+        <strong class="num">{{ d.stats.unresolvedFailures }}</strong>
+        <span class="meta">{{ d.stats.unresolvedFailures ? 'Need a decision' : 'All clear' }}</span>
+      </div>
+    </section>
+
+    <div class="columns">
+      <!-- Issues -->
+      <section class="card issues-card" aria-labelledby="issues-title">
+        <div class="card-header">
+          <h2 id="issues-title">Issues</h2>
+          <div class="segmented" role="tablist" aria-label="Issue filter">
+            <button type="button" role="tab" [attr.aria-selected]="activeFilter() === 'open'" (click)="setFilter('open')">Open <span class="count">{{ openIssues().length }}</span></button>
+            <button type="button" role="tab" [attr.aria-selected]="activeFilter() === 'resolved'" (click)="setFilter('resolved')">Resolved <span class="count">{{ resolvedIssues().length }}</span></button>
+            <button type="button" role="tab" [attr.aria-selected]="activeFilter() === 'all'" (click)="setFilter('all')">All</button>
+          </div>
+        </div>
+        <div class="card-body issue-list">
+          @for (item of visibleIssues(); track item.id) {
+            <app-issue-card [issue]="item" [groups]="d.accessGroups" [highlight]="item.id === issue()" />
+          } @empty {
+            @if (activeFilter() === 'open') {
+              <app-empty-state icon="circle-check" title="No open issues" message="Every reservation in the feed is matched, mapped and provisioned." />
+            } @else {
+              <app-empty-state icon="history" title="Nothing resolved yet" message="Issues you resolve here will be listed with their resolution and attempt history." />
+            }
+          }
+        </div>
+      </section>
+
+      <aside class="side">
+        <section class="card" aria-labelledby="scenario-title">
+          <div class="card-header"><h2 id="scenario-title">Demo scenario</h2><span class="demo-chip">Demo control</span></div>
+          <div class="card-body scenarios" role="radiogroup" aria-labelledby="scenario-title">
+            @for (s of scenarios; track s.key) {
+              <button type="button" role="radio" class="scenario" [class.selected]="d.scenario === s.key" [attr.aria-checked]="d.scenario === s.key"
+                [disabled]="!!switching()" (click)="setScenario(s.key)">
+                <span class="radio" aria-hidden="true"></span>
+                <span class="scenario-text">
+                  <strong>{{ s.label }}</strong>
+                  <span>{{ s.description }}</span>
+                </span>
+                @if (switching() === s.key) { <span class="spinner"></span> }
+              </button>
+            }
+          </div>
+        </section>
+
+        @if (d.affectedArrivals.length) {
+          <section class="card" aria-labelledby="affected-title">
+            <div class="card-header"><h2 id="affected-title">Upcoming arrivals affected</h2><span class="meta num">{{ d.affectedArrivals.length }}</span></div>
+            <ul class="affected">
+              @for (a of d.affectedArrivals.slice(0, 8); track a.personId) {
+                <li><button type="button" (click)="panels.openPerson(a.personId)">
+                  <span>{{ a.name }}</span><span class="muted num">Unit {{ a.unit }} · {{ a.checkIn | ptime: 'weekdayDate' }}</span>
+                </button></li>
+              }
+            </ul>
+            @if (d.affectedArrivals.length > 8) { <p class="more meta">+ {{ d.affectedArrivals.length - 8 }} more in the next 48 hours</p> }
+          </section>
+        }
+      </aside>
+    </div>
+
+    <!-- Runs -->
+    <section class="card runs" aria-labelledby="runs-title">
+      <div class="card-header"><h2 id="runs-title">Recent runs</h2><span class="meta">Source: demo reservation feed · CSV fallback scenario</span></div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Started</th>
+              <th scope="col">Trigger</th>
+              <th scope="col" class="right">Received</th>
+              <th scope="col" class="right">Created</th>
+              <th scope="col" class="right">Updated</th>
+              <th scope="col" class="right">Unchanged</th>
+              <th scope="col" class="right">Failed</th>
+              <th scope="col" class="right">Duration</th>
+              <th scope="col">Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (run of d.runs; track run.id) {
+              <tr>
+                <td class="num">
+                  <div>{{ run.startedAt | ptime: 'time' }}</div>
+                  @if (run.note) { <div class="sub-note">{{ run.note }}</div> }
+                </td>
+                <td class="secondary">{{ triggerLabels[run.trigger] }}</td>
+                <td class="num right">{{ run.received }}</td>
+                <td class="num right">{{ run.created }}</td>
+                <td class="num right">{{ run.updated }}</td>
+                <td class="num right">{{ run.unchanged }}</td>
+                <td class="num right" [class.bad]="run.failed > 0">{{ run.failed }}</td>
+                <td class="num right secondary">{{ duration(run.durationMs) }}</td>
+                <td><app-status-badge [label]="resultMeta[run.result].label" [tone]="resultMeta[run.result].tone" [icon]="resultMeta[run.result].icon" /></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  } @else if (center.failed()) {
+    <div class="card"><app-empty-state icon="circle-alert" title="Couldn’t load the sync center" message="The demo API didn’t respond."><button type="button" class="btn sm" (click)="center.reload()">Try again</button></app-empty-state></div>
+  } @else {
+    <div class="card card-body"><app-skeleton [rows]="10" /></div>
+  }
+</div>

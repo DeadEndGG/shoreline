@@ -1,0 +1,71 @@
+<app-dialog-surface
+  [open]="panels.search()"
+  heading="Search"
+  subheading="People, units and access points"
+  width="600px"
+  (closed)="panels.search.set(false)"
+>
+  <div class="field-row">
+    <app-icon name="search" [size]="18" />
+    <input
+      data-autofocus
+      type="search"
+      class="query"
+      placeholder="Try “Avery”, “1104”, or “pool”"
+      aria-label="Search"
+      role="combobox"
+      aria-controls="search-results"
+      aria-expanded="true"
+      [attr.aria-activedescendant]="hits()[active()] ? 'hit-' + hits()[active()].key : null"
+      [value]="query()"
+      (input)="query.set($any($event.target).value)"
+      (keydown)="onKey($event)"
+    />
+    @if (loading()) { <span class="spinner" aria-hidden="true"></span> }
+  </div>
+
+  <div id="search-results" class="results" role="listbox" aria-label="Search results">
+    @if (!query().trim() && hits().length) {
+      <p class="hint">Featured records</p>
+    }
+    @for (group of groups(); track group.name) {
+      <p class="group" role="presentation">{{ group.name }}</p>
+      @for (hit of group.hits; track hit.key) {
+        <div
+          class="search-hit"
+          role="option"
+          [id]="'hit-' + hit.key"
+          [class.active]="indexOf(hit) === active()"
+          [attr.aria-selected]="indexOf(hit) === active()"
+          (mousemove)="active.set(indexOf(hit))"
+          (click)="choose(hit)"
+        >
+          @if (hit.person; as p) {
+            <app-avatar [initials]="p.initials" [seed]="p.id" [size]="28" />
+          } @else {
+            <span class="glyph"><app-icon [name]="hit.icon ?? 'search'" [size]="15" /></span>
+          }
+          <span class="text">
+            <strong>{{ hit.label }}</strong>
+            <span>{{ hit.sub }}</span>
+          </span>
+          @if (hit.person; as p) { <app-status-badge [status]="p.status" /> }
+          <app-icon class="enter" name="arrow-right" [size]="14" />
+        </div>
+      }
+    } @empty {
+      @if (!loading() && query().trim()) {
+        <div class="none">
+          <strong>No matches for “{{ query().trim() }}”</strong>
+          <span>Search by guest name, unit number, reservation ID, or access point.</span>
+        </div>
+      }
+    }
+  </div>
+
+  <div class="foot">
+    <span><span class="kbd">↑</span><span class="kbd">↓</span> to move</span>
+    <span><span class="kbd">↵</span> to open</span>
+    <span><span class="kbd">esc</span> to close</span>
+  </div>
+</app-dialog-surface>
