@@ -113,7 +113,7 @@ function buildLifecycle(state: DemoState, person: Person, stay: Stay | null, cre
   const duplicate = issue?.kind === 'duplicateReservation';
   steps.push(duplicate
     ? step('identity', 'Identity matched', 'failed', issue!.createdAt, 'Two overlapping reservations — review needed')
-    : step('identity', 'Identity matched', 'done', received === null ? null : received + 2000, person.email));
+    : step('identity', 'Identity matched', 'done', received === null ? null : received + 2000, identityDetail(person)));
 
   const mappingGap = issue?.kind === 'missingUnitMapping';
   const groupName = credential ? state.groupNameFor(credential) : null;
@@ -148,6 +148,16 @@ function buildLifecycle(state: DemoState, person: Person, stay: Stay | null, cre
     : step('ended', 'No end date', 'upcoming', null, 'Continues until revoked'));
 
   return steps;
+}
+
+const typeLabels: Record<PersonType, string> = {
+  owner: 'Owner', strGuest: 'STR guest', midtermRenter: 'Mid-term renter', staff: 'Staff', vendor: 'Vendor', visitor: 'Visitor',
+};
+
+/** Jon's pipeline: identity → unit → user type. */
+function identityDetail(person: Person): string {
+  const where = person.unit ? `Unit ${person.unit}` : person.hostUnit ? `Host Unit ${person.hostUnit}` : person.role ?? 'No unit';
+  return `${where} · ${typeLabels[person.type]}`;
 }
 
 function requirePerson(state: DemoState, id: string): [Person, Credential] {

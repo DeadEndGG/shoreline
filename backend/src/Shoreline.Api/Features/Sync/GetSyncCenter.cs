@@ -67,7 +67,7 @@ public static class GetSyncCenter
             new("source", "Track Hospitality", "Demo reservation feed · CSV fallback scenario",
                 outage ? StageHealth.Down : StageHealth.Healthy,
                 outage ? "No response · last received " + PropertyTime.Clock(state.FeedLastReceivedAt) : "Receiving"),
-            new("shoreline", "Shoreline Access", "Matching, permissions and scheduling",
+            new("shoreline", "Shoreline Access", "Identity → unit → user type → access group",
                 open.Count > 0 ? StageHealth.Degraded : StageHealth.Healthy,
                 open.Count > 0 ? $"{open.Count} item{(open.Count == 1 ? "" : "s")} need review" : "All records matched"),
             new("unifi", "UniFi Access", "Credential provisioning (simulated)",

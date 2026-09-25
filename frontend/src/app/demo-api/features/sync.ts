@@ -253,7 +253,7 @@ function getSyncCenter(state: DemoState) {
       health: outage ? 'down' : 'healthy', status: outage ? `No response · last received ${clock(state.feedLastReceivedAt)}` : 'Receiving',
     },
     {
-      key: 'shoreline', name: 'Shoreline Access', caption: 'Matching, permissions and scheduling',
+      key: 'shoreline', name: 'Shoreline Access', caption: 'Identity → unit → user type → access group',
       health: open.length ? 'degraded' : 'healthy', status: open.length ? `${open.length} item${plural} need review` : 'All records matched',
     },
     {

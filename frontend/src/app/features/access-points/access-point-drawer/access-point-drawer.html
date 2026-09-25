@@ -21,6 +21,15 @@
         </div>
       </section>
 
+      <section class="section">
+        <h3>Reader hardware</h3>
+        <ul class="hardware">
+          @for (c of d.point.capabilities ?? []; track c) {
+            <li><app-icon [name]="caps[c]?.icon ?? 'circle-dot'" [size]="15" />{{ caps[c]?.label ?? c }}</li>
+          }
+        </ul>
+      </section>
+
       @if (d.camera; as cam) {
         <section class="section">
           <h3>{{ cam.label }}</h3>

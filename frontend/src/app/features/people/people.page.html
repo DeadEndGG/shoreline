@@ -9,6 +9,20 @@
     </div>
   </header>
 
+  <section class="rules" aria-label="Access rules by user type">
+    @for (rule of rules; track rule.type) {
+      <button type="button" class="rule" [attr.aria-pressed]="type() === rule.type" (click)="setType(type() === rule.type ? null : rule.type)">
+        <span class="rule-head">
+          <app-icon [name]="rule.icon" [size]="15" />
+          <strong>{{ pluralLabels[rule.type] }}</strong>
+          <span class="rule-count num">{{ people.value()?.typeCounts?.[rule.type] ?? '–' }}</span>
+        </span>
+        <span class="rule-window">{{ rule.window }}</span>
+        <span class="rule-where">{{ rule.where }}</span>
+      </button>
+    }
+  </section>
+
   <section class="card directory">
     <div class="toolbar">
       <label class="search-input search">

@@ -11,7 +11,7 @@ import { EmptyState } from '../../../shared/ui/empty-state';
 import { Icon } from '../../../shared/ui/icon';
 import { Skeleton } from '../../../shared/ui/skeleton';
 import { StatusBadge } from '../../../shared/ui/status-badge';
-import { AccessPointDetail, accessPointIcon } from '../access-points.models';
+import { AccessPointDetail, accessPointIcon, capabilityMeta } from '../access-points.models';
 import { CameraStill } from './camera-still';
 
 /** Read-only access point detail. Unlock controls are deliberately out of scope. */
@@ -27,6 +27,7 @@ export class AccessPointDrawer {
   protected readonly demo = inject(DemoState);
   protected readonly categoryLabels = categoryLabels;
   protected readonly icon = accessPointIcon;
+  protected readonly caps = capabilityMeta;
 
   private readonly detail = liveResource<AccessPointDetail>(() => {
     const id = this.panels.accessPointId();

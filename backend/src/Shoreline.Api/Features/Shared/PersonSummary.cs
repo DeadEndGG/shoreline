@@ -62,7 +62,7 @@ public static class PersonProjection
     public static string MethodLabel(CredentialMethod method) => method switch
     {
         CredentialMethod.PinAndQr => "PIN + QR",
-        CredentialMethod.KeyCard => "Key card",
+        CredentialMethod.KeyCard => "NFC fob / card",
         _ => "PIN",
     };
 }

@@ -9,12 +9,16 @@ namespace Shoreline.Api.Features.Overview;
 public static class GetOverview
 {
     public sealed record Response(
+        Lifecycle Lifecycle,
         string Greeting,
         DateTimeOffset Now,
         Metrics Metrics,
         Readiness Readiness,
         Health Health,
         IReadOnlyList<ActivityItem> RecentActivity);
+
+    /// <summary>Credential lifecycle counts for today, in property time.</summary>
+    public sealed record Lifecycle(int Created, int Activated, int Expired, int Revoked, int ManualExceptions, int FailedSyncs);
 
     public sealed record Metrics(int ActiveGuestStays, int ArrivalsToday, int DeparturesToday, int NeedsAttention);
 
@@ -95,7 +99,18 @@ public static class GetOverview
             .Select(ToItem)
             .ToList();
 
-        return new Response($"{greeting}, {DemoClock.ManagerName.Split(' ')[0]}", now, metrics, readiness, health, activity);
+        var today = PropertyTime.DateOf(now);
+        bool HappenedToday(DateTimeOffset? at) => at is { } t && t <= now && PropertyTime.DateOf(t) == today;
+        var live = state.Credentials.Where(c => c.Provisioning == ProvisioningState.Succeeded && !c.IsRevoked).ToList();
+        var lifecycle = new Lifecycle(
+            state.Credentials.Count(c => HappenedToday(c.PreparedAt)),
+            live.Count(c => HappenedToday(c.ValidFrom)),
+            live.Count(c => HappenedToday(c.ValidUntil)),
+            state.Credentials.Count(c => HappenedToday(c.RevokedAt)),
+            state.AuditEvents.Count(e => e.Category == AuditCategory.Manual && HappenedToday(e.At)),
+            openIssues.Count);
+
+        return new Response(lifecycle, $"{greeting}, {DemoClock.ManagerName.Split(' ')[0]}", now, metrics, readiness, health, activity);
     }
 
     internal static IEnumerable<Stay> UpcomingArrivals(DemoState state) =>

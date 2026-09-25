@@ -7,13 +7,25 @@ import { dayOf, iso, isoOrNull } from '../time';
 
 const CATEGORIES: readonly AccessPointCategory[] = ['building', 'amenity', 'exterior', 'service'];
 
+const INTERCOM = new Set(['main-lobby', 'parking-entry', 'service-entry']);
+
+/** Reader hardware at each point: keypad + NFC everywhere, QR at entries and gates, intercom at selected doors. */
+export function capabilitiesOf(point: AccessPoint): string[] {
+  return [
+    'pin', 'nfc',
+    ...(point.category === 'building' || point.category === 'exterior' ? ['qr'] : []),
+    ...(point.hasCamera ? ['camera'] : []),
+    ...(INTERCOM.has(point.id) ? ['intercom'] : []),
+  ];
+}
+
 function toItem(state: DemoState, point: AccessPoint) {
   const today = dayOf(state.now);
   const events = state.auditTimeline().filter((e) => e.accessPointId === point.id && e.at <= state.now);
   const last = events.find((e) => e.category === 'access' && e.result !== 'warning') ?? events[0];
   return {
     id: point.id, name: point.name, location: point.location, category: point.category, kind: point.kind,
-    online: point.online, offlineSince: isoOrNull(point.offlineSince), hasCamera: point.hasCamera,
+    online: point.online, offlineSince: isoOrNull(point.offlineSince), hasCamera: point.hasCamera, capabilities: capabilitiesOf(point),
     groups: state.accessGroups.filter((g) => g.accessPointIds.includes(point.id)).map((g) => g.name),
     lastActivity: last ? { at: iso(last.at), title: last.title, personName: last.personName, result: last.result } : null,
     entriesToday: events.filter((e) => e.category === 'access' && e.result === 'success' && dayOf(e.at) === today).length,

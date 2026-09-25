@@ -194,6 +194,19 @@ describe('demo script', () => {
     expect(overview['readiness']['ready']).toBe(39);
   });
 
+  it('reports the credential lifecycle Jon asked for', () => {
+    let lifecycle = get('overview')['lifecycle'];
+    expect(lifecycle['expired']).toBe(38);
+    expect(lifecycle['revoked']).toBe(0);
+    expect(lifecycle['failedSyncs']).toBe(3);
+    post('people/avery-morgan/revoke', { reason: 'Owner cancelled' });
+    advance('checkIn');
+    lifecycle = get('overview')['lifecycle'];
+    expect(lifecycle['revoked']).toBe(1);
+    expect(lifecycle['manualExceptions']).toBe(1);
+    expect(lifecycle['activated']).toBeGreaterThanOrEqual(38);
+  });
+
   it('only moves the clock forward', () => {
     advance('checkIn');
     expect(advance('checkIn').status).toBe(400);

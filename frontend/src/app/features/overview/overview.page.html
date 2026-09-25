@@ -17,17 +17,6 @@
     </div>
   </header>
 
-  @if (data()?.health?.feedStale) {
-    <div class="note warning" role="status">
-      <app-icon name="warning" [size]="16" />
-      <span>
-        <strong>Reservation feed unavailable.</strong>
-        Some upcoming arrivals may need attention. Existing access status requires confirmation.
-        <a routerLink="/sync">Open sync center</a>
-      </span>
-    </div>
-  }
-
   <section class="metrics" aria-label="Key numbers">
     @if (data(); as d) {
       <app-metric-tile label="Active guest stays" icon="house" [value]="d.metrics.activeGuestStays" caption="Short-term stays in progress" link="/people" [query]="{ segment: 'activeStays' }" />
@@ -224,6 +213,29 @@
               <p class="affected">{{ d.health.upcomingArrivalsAffected }} arrivals in the next 48 hours may be delayed.</p>
             }
             <p class="footnote">Status of the simulated environment. Healthy connectivity doesn’t mean every reservation succeeded — see Arrival readiness.</p>
+          } @else {
+            <app-skeleton [rows]="4" />
+          }
+        </div>
+      </section>
+
+      <!-- Credential lifecycle (Jon's dashboard list) -->
+      <section class="card" aria-labelledby="lifecycle-title">
+        <div class="card-header">
+          <h2 id="lifecycle-title">Credentials today</h2>
+          <span class="meta">Automated lifecycle</span>
+        </div>
+        <div class="card-body">
+          @if (data(); as d) {
+            <dl class="ledger">
+              <div><dt><app-icon name="key" [size]="14" />Created</dt><dd class="num">{{ d.lifecycle.created }}</dd></div>
+              <div><dt><app-icon name="circle-check" [size]="14" />Activated</dt><dd class="num">{{ d.lifecycle.activated }}</dd></div>
+              <div><dt><app-icon name="circle-pause" [size]="14" />Expired</dt><dd class="num">{{ d.lifecycle.expired }}</dd></div>
+              <a routerLink="/people" [queryParams]="{ status: 'revoked' }"><dt><app-icon name="ban" [size]="14" />Revoked</dt><dd class="num">{{ d.lifecycle.revoked }}</dd></a>
+              <a routerLink="/activity"><dt><app-icon name="user" [size]="14" />Manual exceptions</dt><dd class="num">{{ d.lifecycle.manualExceptions }}</dd></a>
+              <a routerLink="/sync" [class.bad]="d.lifecycle.failedSyncs > 0"><dt><app-icon name="warning" [size]="14" />Failed syncs</dt><dd class="num">{{ d.lifecycle.failedSyncs }}</dd></a>
+            </dl>
+            <p class="footnote">Created in advance, activated at check-in, expired at checkout — without staff touching UniFi.</p>
           } @else {
             <app-skeleton [rows]="4" />
           }

@@ -28,7 +28,7 @@ export function toSummary(state: DemoState, person: Person): PersonSummary {
 
 export const scheduleLabel = (s: DailySchedule) => `Daily ${clockOfMinutes(s.start)}–${clockOfMinutes(s.end)}`;
 
-export const methodLabel = (method: CredentialMethod) => (method === 'pinAndQr' ? 'PIN + QR' : method === 'keyCard' ? 'Key card' : 'PIN');
+export const methodLabel = (method: CredentialMethod) => (method === 'pinAndQr' ? 'PIN + QR' : method === 'keyCard' ? 'NFC fob / card' : 'PIN');
 
 export function toActivityItem(e: AuditEvent): ActivityItem {
   return {

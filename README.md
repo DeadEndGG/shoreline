@@ -8,6 +8,8 @@ A clickable demo of a guest and owner access system for **Shoreline Residences**
 
 > **Demo only.** Every person, reservation, credential, PIN, QR code and number is invented. Nothing connects to Track, UniFi, email or SMS. There is **no database**: all state lives in memory and resets when you reload the page or choose **Reset demo**.
 
+See **[docs/ux-demo-plan.md](docs/ux-demo-plan.md)** for the UX plan and a table tracing each of Jon Hodge's requirements to the screen that shows it.
+
 **The app is a static site.** By default the demo API runs **inside the browser**, so it deploys to GitHub Pages with no server. An equivalent ASP.NET Core API is in `backend/` for when a real server is needed. Both implement the same vertical slices, contracts and rules, and a build flag switches between them.
 
 | Layer | Stack |

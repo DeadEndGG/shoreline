@@ -64,7 +64,7 @@ export const personTypeLabels: Record<PersonType, string> = {
 
 export const methodLabels: Record<CredentialMethod, string> = {
   pinAndQr: 'PIN + QR',
-  keyCard: 'Key card',
+  keyCard: 'NFC fob / card',
   pin: 'PIN',
 };
 

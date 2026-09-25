@@ -17,6 +17,7 @@ public static class ListAccessPoints
         bool Online,
         DateTimeOffset? OfflineSince,
         bool HasCamera,
+        IReadOnlyList<string> Capabilities,
         IReadOnlyList<string> Groups,
         LastActivity? LastActivity,
         int EntriesToday);
@@ -42,6 +43,18 @@ public static class ListAccessPoints
         return new Response(state.AccessPoints.Count, state.AccessPoints.Count(a => a.Online), counts, items);
     }
 
+    private static readonly HashSet<string> Intercom = ["main-lobby", "parking-entry", "service-entry"];
+
+    /// <summary>Reader hardware: keypad + NFC everywhere, QR at entries and gates, intercom at selected doors.</summary>
+    internal static IReadOnlyList<string> CapabilitiesOf(AccessPoint point)
+    {
+        var list = new List<string> { "pin", "nfc" };
+        if (point.Category is AccessPointCategory.Building or AccessPointCategory.Exterior) list.Add("qr");
+        if (point.HasCamera) list.Add("camera");
+        if (Intercom.Contains(point.Id)) list.Add("intercom");
+        return list;
+    }
+
     internal static Item ToItem(DemoState state, AccessPoint point)
     {
         var today = PropertyTime.DateOf(state.Now);
@@ -56,6 +69,7 @@ public static class ListAccessPoints
             point.Online,
             point.OfflineSince,
             point.HasCamera,
+            CapabilitiesOf(point),
             state.AccessGroups.Where(g => g.AccessPointIds.Contains(point.Id)).Select(g => g.Name).ToList(),
             last is null ? null : new LastActivity(last.At, last.Title, last.PersonName, last.Result),
             events.Count(e => e.Category == AuditCategory.Access && e.Result == AuditResult.Success && PropertyTime.DateOf(e.At) == today));

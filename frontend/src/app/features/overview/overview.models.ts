@@ -1,6 +1,7 @@
 import { ActivityItem, DemoScenario, PersonSummary, SyncIssueKind } from '../../core/api/models';
 
 export interface OverviewResponse {
+  lifecycle: { created: number; activated: number; expired: number; revoked: number; manualExceptions: number; failedSyncs: number };
   greeting: string;
   now: string;
   metrics: { activeGuestStays: number; arrivalsToday: number; departuresToday: number; needsAttention: number };

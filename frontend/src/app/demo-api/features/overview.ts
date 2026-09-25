@@ -3,7 +3,7 @@ import { AccessRules, Stay, initials } from '../domain';
 import { StaySegments, matchesSummary, toActivityItem, toSummary, upcomingArrivals } from '../projections';
 import { Route, clamp, enumParam, intParam } from '../router';
 import { DemoClock, DemoState } from '../state';
-import { iso, minuteOfDay } from '../time';
+import { dayOf, iso, minuteOfDay } from '../time';
 
 export const STATUSES: readonly CredentialStatus[] = ['scheduled', 'active', 'needsAttention', 'expired', 'revoked'];
 
@@ -21,7 +21,20 @@ export function getOverview(state: DemoState) {
   const minute = minuteOfDay(now);
   const greeting = minute < 12 * 60 ? 'Good morning' : minute < 17 * 60 ? 'Good afternoon' : 'Good evening';
 
+  // Jon's dashboard list: created, activated, expired, revoked, manual exceptions, failed syncs.
+  const today = dayOf(now);
+  const happenedToday = (ms: number | null) => ms !== null && ms <= now && dayOf(ms) === today;
+  const live = state.credentials.filter((c) => c.provisioning === 'succeeded' && !c.isRevoked);
+
   return {
+    lifecycle: {
+      created: state.credentials.filter((c) => happenedToday(c.preparedAt)).length,
+      activated: live.filter((c) => happenedToday(c.validFrom)).length,
+      expired: live.filter((c) => happenedToday(c.validUntil)).length,
+      revoked: state.credentials.filter((c) => happenedToday(c.revokedAt)).length,
+      manualExceptions: state.auditEvents.filter((e) => e.category === 'manual' && happenedToday(e.at)).length,
+      failedSyncs: open.length,
+    },
     greeting: `${greeting}, ${DemoClock.managerName.split(' ')[0]}`,
     now: iso(now),
     metrics: {

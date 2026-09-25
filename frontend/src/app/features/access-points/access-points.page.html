@@ -38,10 +38,12 @@
             </div>
             <strong class="point-name">{{ p.name }}</strong>
             <span class="point-loc">{{ categoryLabels[p.category] }} · {{ p.location }}</span>
-            <div class="groups">
-              @for (g of p.groups.slice(0, 2); track g) { <span class="group">{{ g }}</span> }
-              @if (p.groups.length > 2) { <span class="group more">+{{ p.groups.length - 2 }}</span> }
+            <div class="caps" aria-label="Reader hardware">
+              @for (c of p.capabilities ?? []; track c) {
+                <span class="cap" [title]="caps[c]?.label ?? c"><app-icon [name]="caps[c]?.icon ?? 'circle-dot'" [size]="12" />{{ caps[c]?.label ?? c }}</span>
+              }
             </div>
+            <span class="group-count">{{ p.groups.length }} access groups · {{ p.entriesToday }} entries today</span>
             <div class="point-foot">
               @if (p.lastActivity; as a) {
                 <span class="last" [class.denied]="a.result === 'denied'">{{ a.title }}@if (a.personName) { · {{ a.personName }} }</span>
@@ -64,6 +66,7 @@
                 <th scope="col">Access point</th>
                 <th scope="col">Area</th>
                 <th scope="col">Status</th>
+                <th scope="col">Hardware</th>
                 <th scope="col">Groups</th>
                 <th scope="col" class="right">Entries today</th>
                 <th scope="col">Last activity</th>
@@ -83,6 +86,7 @@
                     @if (p.online) { <app-status-badge label="Online" tone="success" icon="wifi" /> }
                     @else { <app-status-badge [label]="'Offline · ' + offlineFor(p.offlineSince)" tone="warning" icon="wifi-off" /> }
                   </td>
+                  <td class="secondary">{{ capsLabel(p.capabilities) }}</td>
                   <td class="secondary num">{{ p.groups.length }}</td>
                   <td class="num right">{{ p.entriesToday }}</td>
                   <td class="secondary">
@@ -101,5 +105,5 @@
     <div class="card card-body"><app-skeleton [rows]="8" /></div>
   }
 
-  <p class="future"><app-icon name="info" [size]="14" /><span><strong>Future expansion:</strong> UniFi Protect cameras, intercom and vehicle access could join this view after hardware validation. Door unlock controls are intentionally out of scope.</span></p>
+  <p class="future"><app-icon name="info" [size]="14" /><span><strong>Future expansion (phase 4):</strong> live Protect video, intercom answering, a vehicle gate with LPR, and 40+ cameras. Hardware shown here is illustrative until the phase 1 proof of concept on one or two gates. Door unlock controls are intentionally out of scope.</span></p>
 </div>

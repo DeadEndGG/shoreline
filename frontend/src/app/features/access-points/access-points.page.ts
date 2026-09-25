@@ -10,7 +10,7 @@ import { EmptyState } from '../../shared/ui/empty-state';
 import { Icon } from '../../shared/ui/icon';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { StatusBadge } from '../../shared/ui/status-badge';
-import { AccessPointsResponse, accessPointIcon } from './access-points.models';
+import { AccessPointsResponse, accessPointIcon, capabilityMeta } from './access-points.models';
 
 @Component({
   selector: 'app-access-points-page',
@@ -28,6 +28,7 @@ export class AccessPointsPage {
   protected readonly categories: AccessPointCategory[] = ['building', 'amenity', 'exterior', 'service'];
   protected readonly categoryLabels = categoryLabels;
   protected readonly icon = accessPointIcon;
+  protected readonly caps = capabilityMeta;
 
   protected readonly points = liveResource<AccessPointsResponse>(() => ({
     url: api('access-points'),
@@ -37,6 +38,10 @@ export class AccessPointsPage {
     const c = this.points.value()?.categoryCounts;
     return c ? Object.values(c).reduce((a, b) => a + b, 0) : 0;
   });
+
+  protected capsLabel(capabilities: string[] | undefined) {
+    return (capabilities ?? []).map((c) => this.caps[c]?.label ?? c).join(' · ') || '—';
+  }
 
   protected setLayout(layout: 'grid' | 'table') {
     this.layout.set(layout);

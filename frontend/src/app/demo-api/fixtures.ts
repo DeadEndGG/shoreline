@@ -363,7 +363,7 @@ function seedActivity(ctx: Context) {
   }
 
   s.audit('access', 'Access granted', 'success', 'UniFi Access', { person: P('elena-park'), accessPoint: A('fitness-center'), detail: 'Mobile QR', at: T(7, 12) });
-  s.audit('access', 'Access granted', 'success', 'UniFi Access', { person: P('sam-rivera'), accessPoint: A('staff-entrance'), detail: 'Key card · on shift', at: T(7, 56) });
+  s.audit('access', 'Access granted', 'success', 'UniFi Access', { person: P('sam-rivera'), accessPoint: A('staff-entrance'), detail: 'NFC fob · on shift', at: T(7, 56) });
   s.audit('access', 'Access granted', 'success', 'UniFi Access', { person: P('coastal-hvac'), accessPoint: A('service-entry'), detail: 'PIN · within 9:00 AM–12:00 PM window', at: T(9, 4) });
   s.audit('access', 'Access granted', 'success', 'UniFi Access', { person: P('coastal-hvac'), accessPoint: A('maintenance-room'), detail: 'PIN', at: T(9, 11) });
 
@@ -379,7 +379,7 @@ function seedActivity(ctx: Context) {
   s.audit('sync', 'Exception created', 'warning', 'Shoreline Access', { person: P('casey-brooks'), detail: 'Duplicate reservation held for review', at: T(12, 1) });
 
   s.audit('access', 'Access granted', 'success', 'UniFi Access', { person: P('dana-whitfield'), accessPoint: A('main-lobby'), detail: 'Visitor QR · host Unit 1201', at: T(14, 6) });
-  s.audit('access', 'Access granted', 'success', 'UniFi Access', { person: P('morgan-lane'), accessPoint: A('owners-lounge'), detail: 'Key card', at: T(14, 20) });
+  s.audit('access', 'Access granted', 'success', 'UniFi Access', { person: P('morgan-lane'), accessPoint: A('owners-lounge'), detail: 'NFC fob', at: T(14, 20) });
   s.audit('access', 'Access point offline', 'warning', 'UniFi Access', { accessPoint: A('service-entry'), detail: 'Controller lost contact with the service entry reader', at: T(15, 37) });
   s.audit('sync', 'Reservation feed received', 'success', 'Track feed', { detail: 'No changes', at: T(15, 43) });
 }

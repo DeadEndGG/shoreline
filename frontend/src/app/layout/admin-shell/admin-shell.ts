@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { DemoState } from '../../core/demo/demo-state';
@@ -14,7 +14,7 @@ import { Topbar } from '../topbar/topbar';
 
 @Component({
   selector: 'app-admin-shell',
-  imports: [RouterOutlet, Sidebar, Topbar, SearchDialog, PersonDrawer, AccessPointDrawer, TemporaryAccessDialog, Icon],
+  imports: [RouterOutlet, RouterLink, Sidebar, Topbar, SearchDialog, PersonDrawer, AccessPointDrawer, TemporaryAccessDialog, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '(document:keydown)': 'onKeydown($event)' },
   template: `
@@ -32,6 +32,13 @@ import { Topbar } from '../topbar/topbar';
           <app-icon name="wifi-off" [size]="16" />
           <span><strong>Demo API not reachable.</strong> Start the backend (<code>dotnet run</code> in <code>backend/src/Shoreline.Api</code>) or build without the <code>server</code> configuration.</span>
           <button type="button" class="btn sm" (click)="demo.refresh()">Retry</button>
+        </div>
+      }
+      @if (demo.scenario() === 'feedUnavailable') {
+        <div class="outage" role="alert">
+          <app-icon name="warning" [size]="16" />
+          <span><strong>Track feed unavailable.</strong> Some upcoming arrivals may need attention. Existing access status requires confirmation.</span>
+          <a class="btn sm" routerLink="/sync">Open sync center</a>
         </div>
       }
       <main id="main" tabindex="-1">

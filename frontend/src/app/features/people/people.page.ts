@@ -9,7 +9,7 @@ import { PropertyTimePipe } from '../../core/time/time.pipes';
 import { Panels } from '../../core/ui/panels';
 import { Avatar } from '../../shared/ui/avatar';
 import { EmptyState } from '../../shared/ui/empty-state';
-import { Icon } from '../../shared/ui/icon';
+import { Icon, IconName } from '../../shared/ui/icon';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { StatusBadge } from '../../shared/ui/status-badge';
 import { PeopleResponse, Segment } from './people.models';
@@ -47,6 +47,16 @@ export class PeoplePage {
     owner: 'Owners', strGuest: 'STR guests', midtermRenter: 'Mid-term renters', staff: 'Staff', vendor: 'Vendors', visitor: 'Visitors',
   };
   protected readonly types: PersonType[] = ['owner', 'strGuest', 'midtermRenter', 'staff', 'vendor', 'visitor'];
+
+  /** Jon's access rules per user type, shown read-only; rules live on each person's credential. */
+  protected readonly rules: { type: PersonType; icon: IconName; window: string; where: string }[] = [
+    { type: 'owner', icon: 'house', window: 'Permanent access', where: 'All amenities · NFC fob or PIN' },
+    { type: 'strGuest', icon: 'calendar', window: 'Reservation dates', where: '4 PM check-in → 10 AM checkout · PIN + QR' },
+    { type: 'midtermRenter', icon: 'key', window: 'Lease dates', where: 'Guest amenities + mailroom' },
+    { type: 'staff', icon: 'shield', window: 'Role & shift schedule', where: 'Back of house during shifts' },
+    { type: 'vendor', icon: 'wrench', window: 'Limited locations & hours', where: 'Service entry · approved window' },
+    { type: 'visitor', icon: 'user', window: 'Temporary, host approved', where: 'Lobby & pool · single visit' },
+  ];
 
   protected readonly searchText = linkedSignal(() => this.q() ?? '');
   private readonly debounced = toSignal(toObservable(this.searchText).pipe(debounceTime(200)), { initialValue: this.q() ?? '' });

@@ -438,7 +438,7 @@ public static class DemoFixtures
         }
 
         s.Audit(AuditCategory.Access, "Access granted", AuditResult.Success, "UniFi Access", P("elena-park"), A("fitness-center"), "Mobile QR", T(7, 12));
-        s.Audit(AuditCategory.Access, "Access granted", AuditResult.Success, "UniFi Access", P("sam-rivera"), A("staff-entrance"), "Key card · on shift", T(7, 56));
+        s.Audit(AuditCategory.Access, "Access granted", AuditResult.Success, "UniFi Access", P("sam-rivera"), A("staff-entrance"), "NFC fob · on shift", T(7, 56));
         s.Audit(AuditCategory.Access, "Access granted", AuditResult.Success, "UniFi Access", P("coastal-hvac"), A("service-entry"), "PIN · within 9:00 AM–12:00 PM window", T(9, 4));
         s.Audit(AuditCategory.Access, "Access granted", AuditResult.Success, "UniFi Access", P("coastal-hvac"), A("maintenance-room"), "PIN", T(9, 11));
 
@@ -459,7 +459,7 @@ public static class DemoFixtures
         s.Audit(AuditCategory.Sync, "Exception created", AuditResult.Warning, "Shoreline Access", P("casey-brooks"), detail: "Duplicate reservation held for review", at: T(12, 1));
 
         s.Audit(AuditCategory.Access, "Access granted", AuditResult.Success, "UniFi Access", P("dana-whitfield"), A("main-lobby"), "Visitor QR · host Unit 1201", T(14, 6));
-        s.Audit(AuditCategory.Access, "Access granted", AuditResult.Success, "UniFi Access", P("morgan-lane"), A("owners-lounge"), "Key card", T(14, 20));
+        s.Audit(AuditCategory.Access, "Access granted", AuditResult.Success, "UniFi Access", P("morgan-lane"), A("owners-lounge"), "NFC fob", T(14, 20));
         s.Audit(AuditCategory.Access, "Access point offline", AuditResult.Warning, "UniFi Access", accessPoint: A("service-entry"),
             detail: "Controller lost contact with the service entry reader", at: T(15, 37));
         s.Audit(AuditCategory.Sync, "Reservation feed received", AuditResult.Success, "Track feed", detail: "No changes", at: T(15, 43));

@@ -103,3 +103,25 @@ main {
     margin: 12px 16px 0;
   }
 }
+
+// App-wide: management should know immediately, whichever screen is open.
+.outage {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 32px;
+  background: var(--warning-soft);
+  border-bottom: 1px solid var(--warning-line);
+  color: #7c3a06;
+  font-size: 13px;
+  animation: fade-in var(--dur-base) ease;
+
+  span {
+    flex: 1;
+  }
+
+  @media (max-width: 720px) {
+    padding: 10px 16px;
+    flex-wrap: wrap;
+  }
+}

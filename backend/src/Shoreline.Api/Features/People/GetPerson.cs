@@ -125,6 +125,21 @@ public static class GetPerson
             actions);
     }
 
+    private static string IdentityDetail(Person person)
+    {
+        var where = person.Unit is not null ? $"Unit {person.Unit}" : person.HostUnit is not null ? $"Host Unit {person.HostUnit}" : person.Role ?? "No unit";
+        var type = person.Type switch
+        {
+            PersonType.Owner => "Owner",
+            PersonType.StrGuest => "STR guest",
+            PersonType.MidtermRenter => "Mid-term renter",
+            PersonType.Staff => "Staff",
+            PersonType.Vendor => "Vendor",
+            _ => "Visitor",
+        };
+        return $"{where} · {type}";
+    }
+
     /// <summary>received → identity matched → permissions assigned → credential prepared → scheduled/active → expired/revoked.</summary>
     internal static IReadOnlyList<LifecycleStep> BuildLifecycle(DemoState state, Person person, Stay? stay, Credential? credential, SyncIssue? issue)
     {
@@ -146,7 +161,7 @@ public static class GetPerson
         var duplicate = issue?.Kind == SyncIssueKind.DuplicateReservation;
         steps.Add(duplicate
             ? new LifecycleStep("identity", "Identity matched", StepState.Failed, issue!.CreatedAt, "Two overlapping reservations — review needed")
-            : new LifecycleStep("identity", "Identity matched", StepState.Done, received?.AddSeconds(2), person.Email));
+            : new LifecycleStep("identity", "Identity matched", StepState.Done, received?.AddSeconds(2), IdentityDetail(person)));
 
         var mappingGap = issue?.Kind == SyncIssueKind.MissingUnitMapping;
         var groupName = credential is null ? null : state.GroupNameFor(credential);
