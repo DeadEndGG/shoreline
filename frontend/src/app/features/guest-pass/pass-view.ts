@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { OWNERSHIP } from '../../core/ownership';
 import { PropertyTimePipe } from '../../core/time/time.pipes';
 import { BrandMark } from '../../shared/ui/brand-mark';
 import { CredentialCard } from '../../shared/ui/credential-card';
@@ -27,6 +28,7 @@ const areaIcons: Record<string, IconName> = {
 export class PassView {
   readonly pass = input.required<GuestPass>();
 
+  protected readonly ownership = OWNERSHIP;
   protected readonly openSection = signal<'arrival' | 'desk' | null>(null);
   protected readonly usable = computed(() => ['ready', 'active'].includes(this.pass().state));
   protected readonly statusIcon = computed<IconName>(() => {

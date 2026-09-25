@@ -1,5 +1,7 @@
 # Shoreline Access — demo
 
+**© 2026 Long Island Data. Prototype prepared for Jon Hodge. Confidential — all rights reserved (see [LICENSE](LICENSE)).**
+
 A clickable demo of a guest and owner access system for **Shoreline Residences**, a fictional 340-unit, 14-floor beachfront condominium in Panama City Beach, Florida. It shows the workflow for a custom Track Hospitality → UniFi Access integration: management can see immediately whether arriving guests will have access, understand any problem, and resolve the exception.
 
 <p align="center"><img src="docs/brand/shoreline-access-logo.png" alt="Shoreline Access" width="420"></p>

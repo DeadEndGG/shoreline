@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angu
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { DEMO_CREDENTIALS, DemoSession } from '../../core/auth/demo-session';
+import { OWNERSHIP } from '../../core/ownership';
 import { BrandMark } from '../../shared/ui/brand-mark';
 import { Icon } from '../../shared/ui/icon';
 
@@ -27,6 +28,7 @@ export class SignInPage {
   protected readonly submitting = signal(false);
   protected readonly submitted = signal(false);
   protected readonly credentials = DEMO_CREDENTIALS;
+  protected readonly ownership = OWNERSHIP;
 
   protected async submit() {
     this.submitted.set(true);
