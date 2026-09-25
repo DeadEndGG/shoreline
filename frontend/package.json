@@ -4,7 +4,10 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "start:server": "ng serve --configuration server",
     "build": "ng build",
+    "build:server": "ng build --configuration server",
+    "test": "vitest run",
     "watch": "ng build --watch --configuration development",
     "format": "prettier --write \"src/**/*.{ts,html,scss}\""
   },
@@ -27,7 +30,8 @@
     "@angular/cli": "22.2.0",
     "@angular/compiler-cli": "22.2.0",
     "prettier": "3.9.9",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "5.0.1"
   },
   "engines": {
     "node": ">=24.11.0"

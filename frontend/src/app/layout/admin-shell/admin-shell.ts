@@ -30,7 +30,7 @@ import { Topbar } from '../topbar/topbar';
       @if (demo.unreachable()) {
         <div class="offline" role="alert">
           <app-icon name="wifi-off" [size]="16" />
-          <span><strong>Demo API not reachable.</strong> Start the backend (<code>dotnet run</code> in <code>backend/src/Shoreline.Api</code>) and this page will recover.</span>
+          <span><strong>Demo API not reachable.</strong> Start the backend (<code>dotnet run</code> in <code>backend/src/Shoreline.Api</code>) or build without the <code>server</code> configuration.</span>
           <button type="button" class="btn sm" (click)="demo.refresh()">Retry</button>
         </div>
       }

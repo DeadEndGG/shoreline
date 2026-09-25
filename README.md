@@ -6,12 +6,15 @@ A clickable demo of a guest and owner access system for **Shoreline Residences**
 
 ![Overview](docs/screenshots/overview.png)
 
-> **Demo only.** Every person, reservation, credential, PIN, QR code and number is invented. Nothing connects to Track, UniFi, email or SMS. There is **no database**: all state lives in memory in the API and resets when the API restarts or you choose **Reset demo**.
+> **Demo only.** Every person, reservation, credential, PIN, QR code and number is invented. Nothing connects to Track, UniFi, email or SMS. There is **no database**: all state lives in memory and resets when you reload the page or choose **Reset demo**.
+
+**The app is a static site.** By default the demo API runs **inside the browser**, so it deploys to GitHub Pages with no server. An equivalent ASP.NET Core API is in `backend/` for when a real server is needed. Both implement the same vertical slices, contracts and rules, and a build flag switches between them.
 
 | Layer | Stack |
 | --- | --- |
 | Frontend | Angular 22 (standalone components, signals, `httpResource`, reactive forms, zoneless), SCSS design tokens, Inter (bundled), Lucide icons (bundled) |
-| Backend | ASP.NET Core 10 minimal API, **vertical slice architecture**, in-memory state, xUnit integration tests |
+| Demo API, in browser (default) | TypeScript port of the API slices in `frontend/src/app/demo-api/`, served through an `HttpInterceptor`; Vitest tests |
+| Demo API, server (optional) | ASP.NET Core 10 minimal API, **vertical slice architecture**, in-memory state, xUnit integration tests |
 
 ## Architecture
 
@@ -48,6 +51,10 @@ Key rules live in `Domain/AccessRules.cs`:
 - Revocation always wins, even after the clock moves forward.
 - Provisioning is idempotent. A retry of a completed operation returns `alreadyResolved` and never writes a second credential.
 
+### In-browser demo API
+
+`frontend/src/app/demo-api/` mirrors the C# slices one to one: `features/overview.ts`, `people.ts`, `sync.ts`, `access-points.ts`, `activity.ts`, `guest-pass.ts`, `search.ts` and `demo.ts`, plus `domain.ts` (including `AccessRules`), deterministic `fixtures.ts` using the same generator and seed, and property-time helpers. `inBrowserApiInterceptor` answers every `api/...` request from memory. It applies the same short simulated latency to mutations and returns the same RFC 7807 validation problems, so the UI can't tell it apart from the server.
+
 ### Frontend — feature folders
 
 ```text
@@ -66,47 +73,41 @@ Drawers and dialogs use the native `<dialog>` element: the browser provides the 
 
 ## Run locally
 
-Requirements: **.NET SDK 10** and **Node.js 24** (`frontend/.nvmrc`).
+Requirement: **Node.js 24** (`frontend/.nvmrc`). No backend is needed.
 
 ```bash
-# 1. API on http://localhost:5080
-cd backend
-dotnet run --project src/Shoreline.Api
-
-# 2. Web app on http://localhost:4200 (proxies /api to the API)
 cd frontend
 npm ci
-npm start
+npm start            # http://localhost:4200 — demo API runs in the browser
+npm test             # Vitest: lifecycle boundaries, revocation, retry idempotency, shared counts
+npx ng build         # static site → frontend/dist/frontend/browser
 ```
 
-Open <http://localhost:4200>. The app opens straight onto the dashboard; there is no sign-in.
+The app opens straight onto the dashboard; there is no sign-in.
+
+### Optional: run against the C# API
+
+Requirement: **.NET SDK 10**.
 
 ```bash
-# Tests
+cd backend && dotnet run --project src/Shoreline.Api     # http://localhost:5080
+cd frontend && npm run start:server                     # proxies /api to the API
 cd backend && dotnet test
-
-# Production build of the web app
-cd frontend && npx ng build          # → frontend/dist/frontend/browser
 ```
 
-The OpenAPI document is available in Development at `http://localhost:5080/openapi/v1.json`.
+`npm run build:server` produces a build that calls the real API. The `Dockerfile` packages that API together with the SPA into one container (`docker build -t shoreline-access .`). Run a single instance, because state is in memory.
 
-Simulated controller and feed calls wait about 900 ms so the loading states are visible. Set `Demo__SimulatedLatencyMs=0` to disable the delay.
+## Deploy to GitHub Pages
 
-## Deploy
+`.github/workflows/deploy-pages.yml` tests the app, builds it with `--base-href /<repo>/`, and publishes `frontend/dist/frontend/browser` with the official Pages actions.
 
-Because the demo now has a C# API, it can't be served from GitHub Pages alone. The repository ships a single container in which the API also serves the compiled Angular app:
+1. Push the branch and merge it to `main`. You can also run the workflow manually from the **Actions** tab.
+2. In the repository, open **Settings → Pages** and set **Source** to **GitHub Actions**.
+3. The site is published at `https://<owner>.github.io/<repo>/`, for example `https://deadendgg.github.io/shoreline/`.
 
-```bash
-docker build -t shoreline-access .
-docker run -p 8080:8080 shoreline-access     # → http://localhost:8080
-```
+The app uses hash routing (`withHashLocation()`), so deep links such as `…/shoreline/#/guest/avery-morgan` and page refreshes work without server rewrite rules. All assets are referenced relative to `<base href>`. For a user or organisation site, or a custom domain, change the workflow's `--base-href` to `/`. No credentials or secrets are needed.
 
-This works on any container host (Azure App Service or Container Apps, Fly.io, Render, Railway, and so on). Run **one instance**: the demo state is in memory, so separate instances wouldn't share it.
-
-**Sub-path hosting:** API calls use paths relative to `<base href>` (`api/...`). To host under a sub-path such as `https://example.com/shoreline/`, build with `npx ng build --base-href /shoreline/` and serve the API and SPA together under that same prefix (for example with `app.UsePathBase("/shoreline")`).
-
-CI (`.github/workflows/ci.yml`) builds and tests the API, builds the web app, and builds the container image on every push and pull request.
+CI (`.github/workflows/ci.yml`) additionally builds and tests the C# API, both frontend build modes, and the container image.
 
 ## Demo controls
 

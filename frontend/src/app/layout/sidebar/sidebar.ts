@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, output, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { environment } from '../../../environments/environment';
 import { api } from '../../core/api/api-url';
 import { DemoState } from '../../core/demo/demo-state';
 import { liveResource } from '../../core/demo/live-resource';
@@ -28,6 +29,10 @@ export class Sidebar {
 
   private readonly overview = liveResource<{ metrics: { needsAttention: number } }>(() => api('overview'));
   protected readonly attention = computed(() => this.overview.value()?.metrics.needsAttention ?? 0);
+
+  protected readonly demoNote = environment.api === 'browser'
+    ? 'Demo environment. All data is simulated in your browser and resets when you reload or reset the demo.'
+    : 'Demo environment. All data is simulated and resets when the API restarts or you reset the demo.';
 
   protected readonly items: NavItem[] = [
     { path: '/overview', label: 'Overview', icon: 'dashboard' },
