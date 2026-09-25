@@ -22,8 +22,12 @@
   gap: 40px;
   padding: 40px 56px;
   overflow: hidden;
-  background: linear-gradient(180deg, #edf4ff 0%, #f6f9ff 70%, #fbfcfe 100%);
+  background: #eaf2fd;
   border-right: 1px solid var(--border);
+
+  > :not(.photo, .scrim) {
+    position: relative;
+  }
 
   @media (max-width: 900px) {
     display: none;
@@ -75,7 +79,7 @@
 
 .panel-points {
   list-style: none;
-  margin: 0 0 120px;
+  margin: 0 0 8px;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -86,6 +90,8 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    color: var(--text);
+    font-weight: 500;
   }
 
   app-icon {
@@ -101,13 +107,25 @@
   }
 }
 
-.waves {
+.photo,
+.scrim {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
+}
+
+.photo img {
   width: 100%;
-  height: 140px;
+  height: 100%;
+  object-fit: cover;
+  object-position: 70% center;
+  animation: fade-in 400ms ease;
+}
+
+// Soft light wash from the left keeps copy legible over sky and sand.
+.scrim {
+  background:
+    linear-gradient(90deg, rgb(255 255 255 / 72%) 0%, rgb(255 255 255 / 38%) 45%, rgb(255 255 255 / 0%) 75%),
+    linear-gradient(0deg, rgb(255 255 255 / 55%) 0%, rgb(255 255 255 / 0%) 35%);
 }
 
 // ── Form ────────────────────────────────────────────────────────────────────
