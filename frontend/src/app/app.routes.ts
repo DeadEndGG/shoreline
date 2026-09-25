@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { requireDemoSession } from './core/auth/demo-session';
 import { AdminShell } from './layout/admin-shell/admin-shell';
 
 export const routes: Routes = [
@@ -9,8 +10,15 @@ export const routes: Routes = [
     loadComponent: () => import('./features/guest-pass/guest-pass.page').then((m) => m.GuestPassPage),
   },
   {
+    path: 'sign-in',
+    title: 'Sign in · Shoreline Access',
+    loadComponent: () => import('./features/sign-in/sign-in.page').then((m) => m.SignInPage),
+  },
+  {
     path: '',
     component: AdminShell,
+    // Cosmetic demo sign-in; the guest pass above stays public like a real guest link.
+    canActivate: [requireDemoSession],
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'overview' },
       {

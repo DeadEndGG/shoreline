@@ -1,0 +1,79 @@
+<div class="layout">
+  <section class="panel" aria-hidden="true">
+    <div class="panel-brand">
+      <app-brand-mark [size]="30" />
+      <span class="wordmark">Shoreline <span>Access</span></span>
+    </div>
+
+    <div class="panel-copy">
+      <p class="eyebrow">Shoreline Residences · Panama City Beach</p>
+      <h2>Every arrival ready before check-in.</h2>
+      <p>Reservations become building access automatically — and when something fails, you know before your guests do.</p>
+    </div>
+
+    <ul class="panel-points">
+      <li><app-icon name="refresh" [size]="16" />Track reservations synced every 15 minutes</li>
+      <li><app-icon name="key" [size]="16" />PIN, NFC and QR credentials that start and end on schedule</li>
+      <li><app-icon name="shield" [size]="16" />Exceptions surfaced with a clear next step</li>
+    </ul>
+
+    <svg class="waves" viewBox="0 0 600 140" preserveAspectRatio="none">
+      <path d="M0 40 C100 24 180 52 300 38 S480 20 600 34" fill="none" stroke="#bcd3fb" stroke-width="1.4" vector-effect="non-scaling-stroke" />
+      <path d="M0 66 C110 50 200 80 320 64 S500 46 600 60" fill="none" stroke="#93b8f6" stroke-width="1.4" vector-effect="non-scaling-stroke" />
+      <path d="M0 92 C120 76 210 106 340 90 S520 72 600 86" fill="none" stroke="#6f9ef0" stroke-width="1.4" vector-effect="non-scaling-stroke" />
+      <path d="M0 140 L0 116 C130 104 230 128 360 114 S530 100 600 110 L600 140 Z" fill="#f4ecdf" />
+    </svg>
+  </section>
+
+  <main class="form-side">
+    <div class="form-wrap">
+      <div class="mobile-brand">
+        <app-brand-mark [size]="28" />
+        <span class="wordmark">Shoreline <span>Access</span></span>
+      </div>
+
+      <h1>Sign in</h1>
+      <p class="sub">Property management console for Shoreline Residences.</p>
+
+      <div class="demo-note" role="note">
+        <app-icon name="info" [size]="15" />
+        <span>
+          <strong>Demo account.</strong> Credentials are pre-filled — any password works.
+          Nothing is verified or sent anywhere.
+        </span>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="field">
+          <label for="email">Work email</label>
+          <input id="email" class="input" type="email" autocomplete="username" formControlName="email" [class.invalid]="error('email')" />
+          @if (error('email'); as e) { <span class="error" role="alert"><app-icon name="circle-alert" [size]="12" />{{ e }}</span> }
+        </div>
+
+        <div class="field">
+          <div class="label-row">
+            <label for="password">Password</label>
+            <span class="hint">Demo: {{ credentials.password }}</span>
+          </div>
+          <div class="password">
+            <input id="password" class="input" [type]="showPassword() ? 'text' : 'password'" autocomplete="current-password" formControlName="password" [class.invalid]="error('password')" />
+            <button type="button" class="btn ghost icon-only sm" (click)="showPassword.set(!showPassword())" [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'" [attr.aria-pressed]="showPassword()">
+              <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="16" />
+            </button>
+          </div>
+          @if (error('password'); as e) { <span class="error" role="alert"><app-icon name="circle-alert" [size]="12" />{{ e }}</span> }
+        </div>
+
+        <button type="submit" class="btn primary submit" [disabled]="submitting()">
+          @if (submitting()) { <span class="spinner"></span> Signing in… } @else { Sign in <app-icon name="arrow-right" [size]="15" /> }
+        </button>
+      </form>
+
+      <div class="divider-row"><span>or</span></div>
+
+      <a class="btn guest-link" routerLink="/guest/avery-morgan"><app-icon name="smartphone" [size]="15" />View a guest pass (no sign-in)</a>
+
+      <p class="foot">Signed in as the fictional property manager <strong>Morgan Hale</strong>. All data is simulated in your browser.</p>
+    </div>
+  </main>
+</div>

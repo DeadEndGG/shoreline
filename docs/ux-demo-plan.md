@@ -16,7 +16,7 @@ Jon's post asks for a phased build that starts with a **Phase 1 proof of concept
 - map visibly to the words Jon used in his post, so he recognises his own requirements;
 - be honest: every integration is simulated and labelled as such, and nothing claims UniFi or Track capability that hasn't been validated.
 
-**Out of scope:** real Track or UniFi calls, authentication, billing, a rules editor, door-unlock controls, live camera video, a backend or database.
+**Out of scope:** real Track or UniFi calls, real authentication (a cosmetic sign-in with pre-filled demo credentials is included for realism), billing, a rules editor, door-unlock controls, live camera video, a backend or database.
 
 ---
 
@@ -79,6 +79,7 @@ Jon's post asks for a phased build that starts with a **Phase 1 proof of concept
 | P0 | **Guest pass** `#/guest/:id` | Standalone mobile page · *Ready for your arrival* / *Access active* / *Stay ended* / *Access revoked* · never shows a PIN or QR for unusable credentials |
 | P1 | **Access points** | 15 points, grid/table, area filters, hardware chips, offline state · drawer with groups, recent entries, camera still |
 | P1 | **Activity** | Day-grouped audit trail, category and denied filters, search, clickable rows |
+| — | Sign-in | Split-screen brand panel and form, credentials pre-filled (`morgan.hale@example.com` / `shoreline-demo`, any password works), redirect back to the requested page, *Sign out* in the avatar menu. Guest pass links stay public. |
 | — | Global | ⌘K search (people, units, doors) · temporary access modal (visitor/vendor, locations, window, reason) · toasts · app-wide outage banner |
 
 ---
@@ -116,6 +117,7 @@ For a custom domain or a user site, build with `--base-href /`.
 
 ## 8. Three-minute demo script
 
+0. **Sign in (before you start).** Open the link and press **Sign in**; the credentials are pre-filled.
 1. **Overview (0:00–0:30).** 42 arrivals, 39 ready, 3 exceptions. *Credentials today* shows the automation working. Problems are visible before check-in.
 2. **Unit 807 (0:30–1:10).** Open Avery. Show the permitted gates, the Saturday 4 PM → Saturday 10 AM window and **Preview guest pass**. Use **Advance to check-in**: *Active* everywhere.
 3. **Resolve a failure (1:10–1:50).** Taylor Reed → **Retry provisioning**. Readiness moves from 39 to 40 of 42, and open issues from 3 to 2. Point out that Jordan and Casey need a decision; a retry won't fix them.

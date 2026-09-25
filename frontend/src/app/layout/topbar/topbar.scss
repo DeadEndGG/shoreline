@@ -117,3 +117,77 @@
   display: flex;
   margin-left: 4px;
 }
+
+.me {
+  position: relative;
+}
+
+.avatar-button {
+  display: flex;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+}
+
+.account-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 30;
+  width: 240px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-overlay);
+  animation: fade-in var(--dur-fast) ease;
+}
+
+.account {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 10px 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+
+  strong {
+    font-size: 13.5px;
+  }
+
+  span {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .email {
+    margin-top: 2px;
+  }
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--surface-blue);
+    color: var(--primary-hover);
+    outline: none;
+  }
+}

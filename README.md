@@ -85,7 +85,13 @@ npm test             # Vitest: lifecycle boundaries, revocation, retry idempoten
 npx ng build         # static site → frontend/dist/frontend/browser
 ```
 
-The app opens straight onto the dashboard; there is no sign-in.
+The admin console opens on a **demo sign-in page** with the credentials pre-filled:
+
+| Email | Password |
+| --- | --- |
+| `morgan.hale@example.com` | `shoreline-demo` (any password works) |
+
+The sign-in is cosmetic, for presentation realism. A static site can't enforce a password, so nothing is verified or sent. The session lasts for the browser tab, and **Sign out** is in the avatar menu. Guest passes (`#/guest/:id`) stay public, like a real guest link.
 
 ### Optional: run against the C# API
 
@@ -124,6 +130,7 @@ CI (`.github/workflows/ci.yml`) additionally builds and tests the C# API, both f
 
 | Route | Screen |
 | --- | --- |
+| `#/sign-in` | Demo sign-in (pre-filled). Accepts `?redirect=` |
 | `#/overview` | Arrival readiness, metrics, system health, recent activity |
 | `#/people` | Directory. Accepts `?segment=activeStays\|arrivalsToday\|departuresToday`, `?type=`, `?status=`, `?q=` |
 | `#/sync` | Sync center. Accepts `?filter=open\|resolved\|all`, `?issue=<id>` |
