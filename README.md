@@ -4,6 +4,8 @@ A clickable demo of a guest and owner access system for **Shoreline Residences**
 
 <p align="center"><img src="docs/brand/shoreline-access-logo.png" alt="Shoreline Access" width="420"></p>
 
+![Overview](docs/screenshots/overview.png)
+
 > **Demo only.** Every person, reservation, credential, PIN, QR code and number is invented. Nothing connects to Track, UniFi, email or SMS. There is **no database**: all state lives in memory in the API and resets when the API restarts or you choose **Reset demo**.
 
 | Layer | Stack |
