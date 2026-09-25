@@ -137,8 +137,13 @@
 .actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 2px;
+
+  .btn.primary {
+    max-width: 100%;
+  }
 
   .grow {
     flex: 1;

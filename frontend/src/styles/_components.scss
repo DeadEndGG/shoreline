@@ -328,6 +328,9 @@
 
 // ── Tables ─────────────────────────────────────────────────────────────────
 .table-wrap {
+  // Positioned so visually-hidden labels in cells are contained by the scroller,
+  // instead of anchoring to the page and widening it on phones.
+  position: relative;
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;

@@ -7,6 +7,13 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  // Safety net: nothing may widen the page sideways on phones. `clip` (unlike
+  // `hidden`) doesn't create a scroll container, so sticky headers keep working.
+  overflow-x: clip;
+}
+
+body {
+  overflow-x: clip;
 }
 
 body {
